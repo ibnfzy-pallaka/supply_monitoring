@@ -1,0 +1,30 @@
+{
+	"entries": [
+		{
+			"date": "2026-09-24",
+			"genre": "editorial",
+			"macrostructure": "bento-grid",
+			"theme": "Almanac (disintesis dari color.md; spesifikasi themes/almanac.md tidak ada)",
+			"enrichment": "none",
+			"nav": "N6-newspaper-masthead",
+			"footer": "Ft4-dense-typographic",
+			"anchorHue": "kopi (oklch 84°) — hue alam studi kasus",
+			"accent": "sienna oklch(56% 0.122 62), <5% viewport",
+			"type": "Source Serif 4 (display) + Atkinson Hyperlegible (body); mono tidak dipakai",
+			"motion": ["reveal-stagger", "tile-lift-border", "underline-grow"],
+			"reducedMotion": "150ms crossfade tanpa translate",
+			"responsiveVerified": [320, 375, 414, 768],
+			"overflowX": "clip, nol horizontal scroll di 4 lebar",
+			"slopGates": "58/58 pass",
+			"checks": "svelte-check 0 error; npm run build sukses",
+			"artifacts": [
+				"src/lib/styles/tokens.css",
+				"src/lib/styles/base.css",
+				"src/routes/+page.svelte (landing publik)",
+				"src/lib/assets/favicon.svg (mark biji kopi)"
+			],
+			"replaced": ["emoji ☕ → SVG mark biji kopi (login + sidebar)", "favicon Svelte default → mark konsisten"],
+			"filesDeleted": 0
+		}
+	]
+}

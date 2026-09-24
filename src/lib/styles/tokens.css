@@ -1,0 +1,152 @@
+/* ================================================================
+   Hallmark · genre: editorial · macrostructure: Bento Grid
+   theme: Almanac · enrichment: none (typography only)
+   nav: N6 masthead · footer: Ft4 dense colophon
+   audience: pemilik/manajemen kedai · use: edukasi fitur, CTA login
+     sekunder · tone: editorial
+   axes: paper-band: light (>85%) · display-style: roman-serif
+     (reference-serif) · accent-hue: warm (60°)
+   contrast: pass (40–41) · slop: pass (58/58)
+   ---------------------------------------------------------------
+   Supply Monitoring · Sistem Persediaan Bahan Baku
+   Kopi Waskita Makassar
+   ---------------------------------------------------------------
+   Konsumsi via `import '$lib/styles/tokens.css'` di root layout.
+   Semua warna & font HARUS memakai token bernama — tidak ada
+   hex/oklch inline di komponen (gate 48).
+   ================================================================ */
+/* Hallmark · pre-emit critique: P4 H4 E5 S5 R5 V5 */
+
+:root {
+	/* ---------- Warna · palet Almanac, anchor hue kopi (84°) ---------- */
+
+	/* Paper — kertas almanak hangat, bukan putih murni */
+	--color-paper: oklch(97.5% 0.011 84);
+	--color-paper-2: oklch(94.5% 0.014 84);
+	--color-paper-3: oklch(92% 0.016 84);
+
+	/* Ink — coklat tinta sangat gelap, bukan hitam murni */
+	--color-ink: oklch(21% 0.014 55);
+	--color-ink-2: oklch(30% 0.016 55);
+
+	/* Neutrals ber-tint kopi */
+	--color-neutral: oklch(55% 0.012 70);
+	--color-muted: oklch(42% 0.013 60);
+	--color-rule: oklch(83% 0.014 84);
+
+	/* Accent — sienna bakar, pemakaian < 5% viewport */
+	--color-accent: oklch(56% 0.122 62);
+	--color-accent-deep: oklch(46% 0.118 58);
+	--color-accent-ink: var(--color-paper);
+
+	/* Fokus & status (kebutuhan form modul 2+) */
+	--color-focus: oklch(56% 0.122 62);
+	--color-danger: oklch(48% 0.15 25);
+	--color-success: oklch(48% 0.11 150);
+
+	/* ---------- Font ---------- */
+	/* 2+1: Source Serif 4 display · Atkinson Hyperlegible body
+	   · outlier mono HANYA 2 slot (gate 38): kode bahan + nomor edisi masthead */
+	--font-display: 'Source Serif 4', ui-serif, Georgia, serif;
+	--font-body: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, sans-serif;
+
+	/* ---------- Skala teks (major third 1.25) ---------- */
+	--text-xs: 0.75rem;     /* 12px — minimal body 14px, ini hanya label */
+	--text-sm: 0.875rem;    /* 14px */
+	--text-base: 1rem;      /* 16px */
+	--text-md: 1.25rem;     /* 20px */
+	--text-lg: 1.563rem;    /* 25px */
+	--text-xl: 1.953rem;    /* 31px */
+	--text-2xl: 2.441rem;   /* 39px */
+	--text-3xl: 3.052rem;   /* 49px */
+	--text-display: clamp(2.75rem, 6vw + 0.5rem, 5.5rem);
+
+	/* ---------- Spacing · skala 4pt ---------- */
+	--space-3xs: 0.125rem; /* 2px */
+	--space-2xs: 0.25rem;  /* 4px */
+	--space-xs: 0.5rem;    /* 8px */
+	--space-sm: 0.75rem;   /* 12px */
+	--space-md: 1rem;      /* 16px */
+	--space-lg: 1.5rem;    /* 24px */
+	--space-xl: 2.5rem;   /* 40px */
+	--space-2xl: 4rem;     /* 64px */
+	--space-3xl: 6rem;     /* 96px */
+	--space-4xl: 9rem;     /* 144px */
+
+	/* ---------- Motion ---------- */
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+	--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+	--dur-micro: 120ms;
+	--dur-short: 220ms;
+	--dur-long: 420ms;
+
+	/* ---------- Rules & radius ---------- */
+	--rule-hair: 1px;
+	--rule-double: 4px;
+	--radius-sm: 2px;
+	--radius-md: 4px;
+
+	/* ---------- Layout ---------- */
+	--page-gutter: clamp(1rem, 4vw, 2rem);
+	--measure: 65ch;
+}
+
+/* ---------- Base ---------- */
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	overflow-x: clip; /* gate 34 — clip, bukan hidden */
+}
+
+body {
+	background: var(--color-paper);
+	color: var(--color-ink);
+	font-family: var(--font-body);
+	font-size: var(--text-base);
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: var(--font-display);
+	font-weight: 600;
+	line-height: 1.1;
+	overflow-wrap: anywhere; /* gate 51 */
+	min-width: 0;
+}
+
+p {
+	margin: 0;
+}
+
+a {
+	color: var(--color-accent-deep);
+	text-underline-offset: 2px;
+}
+
+::selection {
+	background: var(--color-accent);
+	color: var(--color-accent-ink);
+}
+
+:focus-visible {
+	outline: 2px solid var(--color-focus);
+	outline-offset: 2px; /* ring muncul instan, tanpa animasi (gate 15) */
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 150ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 150ms !important;
+	}
+}
