@@ -562,6 +562,10 @@
 			padding-block: var(--space-xl) var(--space-2xl);
 		}
 
+		.mast-nav ul {
+			gap: var(--space-md);
+		}
+
 		.bento {
 			grid-template-columns: 1fr;
 		}
@@ -573,6 +577,15 @@
 
 		.alur__steps {
 			grid-template-columns: 1fr;
+		}
+
+		.hero__cta {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.hero__cta .btn {
+			width: 100%;
 		}
 	}
 

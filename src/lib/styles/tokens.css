@@ -108,6 +108,8 @@ body {
 	margin: 0;
 	padding: 0;
 	overflow-x: clip; /* gate 34 — clip, bukan hidden */
+	min-width: 0;
+	max-width: 100%;
 }
 
 body {
@@ -118,6 +120,8 @@ body {
 	line-height: 1.6;
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
+	padding-inline: max(0px, env(safe-area-inset-left));
+	padding-bottom: max(0px, env(safe-area-inset-bottom));
 }
 
 h1, h2, h3, h4, h5, h6 {

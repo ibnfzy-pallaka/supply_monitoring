@@ -146,4 +146,16 @@
 		margin: 0;
 		flex-shrink: 0;
 	}
+
+	@media (max-width: 30rem) {
+		.item {
+			flex-wrap: wrap;
+			align-items: flex-start;
+		}
+
+		.item form,
+		.sudah {
+			margin-left: auto;
+		}
+	}
 </style>

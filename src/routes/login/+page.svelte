@@ -67,7 +67,7 @@
 		min-height: 100dvh;
 		display: grid;
 		place-items: center;
-		padding: var(--space-lg);
+		padding: clamp(var(--space-md), 4vw, var(--space-2xl));
 		background: var(--color-paper-2);
 	}
 
@@ -76,7 +76,7 @@
 		background: var(--color-paper);
 		border: var(--rule-hair) solid var(--color-rule);
 		border-radius: var(--radius-sm);
-		padding: var(--space-2xl) var(--space-xl);
+		padding: clamp(var(--space-lg), 5vw, var(--space-2xl)) clamp(var(--space-md), 5vw, var(--space-xl));
 	}
 
 	.brand {

@@ -232,7 +232,7 @@
 	background: var(--color-paper);
 	border: var(--rule-hair) solid var(--color-rule);
 	border-radius: var(--radius-sm);
-	padding: var(--space-lg) var(--space-xl);
+	padding: clamp(var(--space-md), 4vw, var(--space-xl));
 }
 
 .filters {
@@ -245,12 +245,26 @@
 
 .filters .input {
 	width: auto;
-	min-width: 12rem;
+	min-width: 10rem;
 	flex: 1;
+}
+
+@media (max-width: 40rem) {
+	.filters {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.filters .input {
+		width: 100%;
+		min-width: 0;
+	}
 }
 
 .tabel-wrap {
 	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	max-width: 100%;
 }
 
 .kosong {
@@ -308,9 +322,21 @@
 
 .form-actions {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--space-md);
 	margin-top: var(--space-lg);
+}
+
+@media (max-width: 30rem) {
+	.form-actions {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.form-actions .btn {
+		width: 100%;
+	}
 }
 
 .btn--sm {

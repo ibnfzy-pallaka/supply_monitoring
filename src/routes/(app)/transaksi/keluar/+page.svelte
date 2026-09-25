@@ -152,6 +152,12 @@
 		margin-bottom: var(--space-lg);
 	}
 
+	@media (max-width: 30rem) {
+		.kepala-seksi .btn {
+			width: 100%;
+		}
+	}
+
 	.sub-seksi {
 		margin: 0;
 		color: var(--color-muted);

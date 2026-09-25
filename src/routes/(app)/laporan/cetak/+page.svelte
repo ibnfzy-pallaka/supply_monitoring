@@ -244,7 +244,9 @@
 	}
 
 	@media print {
-		:global(.sidebar) {
+		:global(.sidebar),
+		:global(.mobile-topbar),
+		:global(.drawer-backdrop) {
 			display: none !important;
 		}
 

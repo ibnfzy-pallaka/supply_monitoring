@@ -174,9 +174,15 @@
 	.subnav {
 		display: flex;
 		gap: var(--space-xs);
-		flex-wrap: wrap;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: none;
 		border-bottom: var(--rule-hair) solid var(--color-rule);
 		margin-bottom: var(--space-lg);
+	}
+
+	.subnav::-webkit-scrollbar {
+		display: none;
 	}
 
 	.subnav a {
@@ -187,6 +193,10 @@
 		border-bottom: 2px solid transparent;
 		margin-bottom: -1px;
 		white-space: nowrap;
+		flex-shrink: 0;
+		min-height: 44px;
+		display: inline-flex;
+		align-items: center;
 		transition: color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out);
 	}
 
@@ -206,6 +216,19 @@
 		gap: var(--space-2xs);
 		font-size: var(--text-xs);
 		color: var(--color-muted);
+	}
+
+	@media (max-width: 40rem) {
+		.mini {
+			display: flex;
+			flex-direction: column;
+			align-items: stretch;
+			width: 100%;
+		}
+
+		.mini .input {
+			width: 100%;
+		}
 	}
 
 	.ringkas {
