@@ -6,7 +6,7 @@
 
 	let mengirim = $state(false)
 
-	const admin = $derived(data.profile.role === 'admin')
+	const owner = $derived(data.profile.role === 'owner')
 </script>
 
 <svelte:head>
@@ -21,7 +21,7 @@
 			 filter per kategori tersedia di bawah.
 		</p>
 	</div>
-	{#if admin}
+	{#if owner}
 		<a class="btn" href="/bahan-baku/baru">Tambah bahan</a>
 	{/if}
 </header>
@@ -60,7 +60,7 @@
 			{data.q || data.kategoriId
 				? 'Tidak ada bahan yang cocok dengan pencarian/filter.'
 				: 'Belum ada data bahan baku.'}
-			{#if admin && !data.q && !data.kategoriId}
+			{#if owner && !data.q && !data.kategoriId}
 				Tambahkan lewat tombol “Tambah bahan”.
 			{/if}
 		</p>
@@ -75,7 +75,7 @@
 						<th class="num">Stok</th>
 						<th class="num">Min.</th>
 						<th class="num">Harga / satuan</th>
-						{#if admin}<th>Aksi</th>{/if}
+						{#if owner}<th>Aksi</th>{/if}
 					</tr>
 				</thead>
 				<tbody>
@@ -92,7 +92,7 @@
 							</td>
 							<td class="num">{formatJumlah(b.stokMinimum)} {b.satuan}</td>
 							<td class="num">{formatRupiah(b.hargaSatuan)}</td>
-							{#if admin}
+							{#if owner}
 								<td class="aksi">
 									<a class="link-aksi" href="/bahan-baku/{b.id}">Ubah</a>
 									<form

@@ -3,10 +3,8 @@ import { requireAdmin, requireUser } from '$lib/auth'
 import { ambil, pesanDb } from '$lib/format'
 import type { Actions, PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals }) => {
 	await requireUser(locals)
-
-	const editId = url.searchParams.get('edit') ?? ''
 
 	const { data, error } = await locals.supabase.from('kategori').select('*').order('nama')
 	if (error) console.error('Kategori: gagal memuat:', error.message)
@@ -17,10 +15,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		deskripsi: (k.deskripsi as string | null) ?? ''
 	}))
 
-	return {
-		kategori,
-		editing: kategori.find((k) => k.id === editId) ?? null
-	}
+	return { kategori }
 }
 
 export const actions: Actions = {

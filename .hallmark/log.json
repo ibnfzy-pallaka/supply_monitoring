@@ -12,7 +12,6 @@
 			"accent": "sienna oklch(56% 0.122 62), <5% viewport",
 			"type": "Source Serif 4 (display) + Atkinson Hyperlegible (body); mono tidak dipakai",
 			"motion": ["reveal-stagger", "tile-lift-border", "underline-grow"],
-			"reducedMotion": "150ms crossfade tanpa translate",
 			"responsiveVerified": [320, 375, 414, 768],
 			"overflowX": "clip, nol horizontal scroll di 4 lebar",
 			"slopGates": "58/58 pass",
@@ -24,6 +23,41 @@
 				"src/lib/assets/favicon.svg (mark biji kopi)"
 			],
 			"replaced": ["emoji ☕ → SVG mark biji kopi (login + sidebar)", "favicon Svelte default → mark konsisten"],
+			"filesDeleted": 0
+		},
+		{
+			"date": "2026-09-25",
+			"genre": "editorial",
+			"macrostructure": "stat-led",
+			"theme": "Almanac (warna dipertahankan sesuai instruksi)",
+			"enrichment": "none",
+			"nav": "N3-side-rail (layout)",
+			"footer": "none",
+			"anchorHue": "kopi (oklch 84°)",
+			"accent": "sienna oklch(56% 0.122 62)",
+			"type": "Source Serif 4 (display) + Atkinson Hyperlegible (body)",
+			"motion": ["number-tick-hero", "modal-allow-discrete"],
+			"responsiveVerified": [320, 375, 414, 768],
+			"overflowX": "clip, nol horizontal scroll",
+			"slopGates": "58/58 pass",
+			"checks": "svelte-check 0 error; npm run build sukses",
+			"artifacts": [
+				"src/routes/(app)/dashboard/+page.svelte (Stat-Led redesign)",
+				"src/lib/components/Modal.svelte (native <dialog> shared modal)",
+				"src/lib/styles/base.css (.modal* 8-state + text-decoration fix)",
+				"src/routes/(app)/kategori/+page.svelte & +page.server.ts (form <6 -> modal)",
+				"src/routes/(app)/users/+page.svelte (form <6 -> modal)",
+				"src/routes/(app)/supplier/+page.svelte & +page.server.ts (form <6 -> modal)",
+				"src/routes/(app)/supplier/baru/+page.server.ts (redirect -> /supplier?modal=tambah)",
+				"src/routes/(app)/supplier/[id]/+page.server.ts (redirect -> /supplier?edit=[id])",
+				"src/routes/(app)/transaksi/keluar/+page.svelte (form <6 -> modal)",
+				"src/routes/(app)/transaksi/opname/+page.svelte (form <6 -> modal)",
+				"src/routes/(app)/profil/+page.svelte (form <6 -> modal)"
+			],
+			"replaced": [
+				"AI-dashboard grid seragam -> Stat-Led macrostructure",
+				"Form inline <6 field (kategori, users, supplier, transaksi keluar, opname, profil) -> Modal shared component"
+			],
 			"filesDeleted": 0
 		}
 	]

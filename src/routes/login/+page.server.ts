@@ -11,22 +11,25 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
 		const formData = await request.formData()
-		const email = String(formData.get('email') ?? '').trim().toLowerCase()
+		const username = String(formData.get('username') ?? '').trim().toLowerCase()
 		const password = String(formData.get('password') ?? '')
 
-		if (!email || !password) {
-			return fail(400, { error: 'Email dan password wajib diisi.', email })
+		if (!username || !password) {
+			return fail(400, { error: 'Username dan password wajib diisi.', username })
 		}
+
+		// Virtual email mapping untuk Supabase Auth
+		const email = username.includes('@') ? username : `${username}@waskita.local`
 
 		const { data, error } = await locals.supabase.auth.signInWithPassword({ email, password })
 		if (error || !data.user) {
-			return fail(401, { error: 'Email atau password salah.', email })
+			return fail(401, { error: 'Username atau password salah.', username })
 		}
 
 		const profile = await ensureProfile(locals, data.user)
 		if (profile && !profile.aktif) {
 			await locals.supabase.auth.signOut()
-			return fail(403, { error: 'Akun Anda dinonaktifkan. Hubungi admin.', email })
+			return fail(403, { error: 'Akun Anda dinonaktifkan. Hubungi owner.', username })
 		}
 
 		redirect(303, '/dashboard')

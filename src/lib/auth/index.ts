@@ -5,8 +5,9 @@ import { getSupabaseAdminClient } from '$lib/supabase/server'
 export type Profile = {
 	id: string
 	email: string
+	username: string
 	nama: string
-	role: 'admin' | 'staff'
+	role: 'owner' | 'staff'
 	aktif: boolean
 }
 
@@ -18,7 +19,13 @@ export async function getProfile(locals: App.Locals, userId: string): Promise<Pr
 		.select(PROFILE_COLUMNS)
 		.eq('id', userId)
 		.single()
-	return (data as Profile | null) ?? null
+	if (!data) return null
+	const rawEmail = (data.email as string) ?? ''
+	const username = rawEmail.endsWith('@waskita.local')
+		? rawEmail.replace('@waskita.local', '')
+		: rawEmail
+	const role = data.role === 'admin' ? 'owner' : (data.role as 'owner' | 'staff')
+	return { ...(data as Omit<Profile, 'username' | 'role'>), username, role }
 }
 
 /**
@@ -47,7 +54,12 @@ export async function ensureProfile(locals: App.Locals, user: User): Promise<Pro
 		console.error('Gagal membuat profil user:', err.message)
 		return null
 	}
-	return data as Profile
+	const rawEmail = (data.email as string) ?? ''
+	const username = rawEmail.endsWith('@waskita.local')
+		? rawEmail.replace('@waskita.local', '')
+		: rawEmail
+	const role = data.role === 'admin' ? 'owner' : (data.role as 'owner' | 'staff')
+	return { ...(data as Omit<Profile, 'username' | 'role'>), username, role }
 }
 
 /** Wajib login & akun aktif; selain itu redirect ke /login. */
@@ -64,11 +76,14 @@ export async function requireUser(locals: App.Locals): Promise<{ user: User; pro
 	return { user, profile }
 }
 
-/** Wajib login + role admin; selain itu 403. */
-export async function requireAdmin(locals: App.Locals): Promise<{ user: User; profile: Profile }> {
+/** Wajib login + role owner; selain itu 403. */
+export async function requireOwner(locals: App.Locals): Promise<{ user: User; profile: Profile }> {
 	const { user, profile } = await requireUser(locals)
-	if (profile.role !== 'admin') {
-		error(403, 'Akses ditolak — halaman ini khusus admin.')
+	if (profile.role !== 'owner') {
+		error(403, 'Akses ditolak — halaman ini khusus owner.')
 	}
 	return { user, profile }
 }
+
+/** Alias untuk kompatibilitas code */
+export const requireAdmin = requireOwner

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatJumlah, formatRupiah } from '$lib/format'
+	import { formatJumlah } from '$lib/format'
 
 	let { data } = $props()
 
@@ -10,6 +10,79 @@
 				? 'Selamat siang'
 				: 'Selamat sore'
 	)
+
+	// ----- Hero Stat-Led: angka paling mendesak memimpin halaman -----
+	const hero = $derived.by(() => {
+		if (data.kritis.length > 0) {
+			const nama = data.kritis
+				.slice(0, 2)
+				.map((b) => b.nama)
+				.join(' dan ')
+			const sisa = data.kritis.length > 2 ? `, +${data.kritis.length - 2} lainnya` : ''
+			return {
+				angka: data.kritis.length,
+				kritis: true,
+				kalimat: 'bahan di bawah minimum.',
+				kualifikasi: `${nama}${sisa} berada di bawah batas minimum — atur pengadaan sebelum habis.`,
+				cta: { label: 'Lihat saran pengadaan', href: '/monitoring' },
+				pakaiTotal: false
+			}
+		}
+		if (data.totalBahan === 0) {
+			return {
+				angka: 0,
+				kritis: false,
+				kalimat: 'jenis bahan baku tercatat.',
+				kualifikasi: 'Belum ada data bahan baku — mulai dengan menambahkan satu item.',
+				cta: { label: 'Tambah bahan baku', href: '/bahan-baku/baru' },
+				pakaiTotal: false
+			}
+		}
+		return {
+			angka: data.totalBahan,
+			kritis: false,
+			kalimat: 'jenis bahan baku terpantau.',
+			kualifikasi: 'Semua stok di atas batas minimum — tidak ada yang perlu dipesan hari ini.',
+			cta: { label: 'Buka daftar bahan baku', href: '/bahan-baku' },
+			pakaiTotal: true
+		}
+	})
+
+	// Strip metrik pendukung — tanpa duplikasi angka yang sudah jadi hero
+	const metrik = $derived([
+		...(hero.pakaiTotal
+			? []
+			: [{ nilai: data.totalBahan, label: 'Jenis bahan baku', nol: false }]),
+		{ nilai: data.masukHariIni, label: 'Masuk hari ini', nol: false },
+		{ nilai: data.keluarHariIni, label: 'Keluar hari ini', nol: false },
+		{
+			nilai: data.notifBelumDibaca,
+			label: 'Notifikasi belum dibaca',
+			nol: data.notifBelumDibaca > 0
+		}
+	])
+
+	// ----- Number tick: 0 → target, ~500ms, ease-out; reduced-motion: final langsung -----
+	let angkaTampil = $state(0)
+
+	$effect(() => {
+		const target = hero.angka
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			angkaTampil = target
+			return
+		}
+		const mulai = performance.now()
+		const durasi = 500
+		let raf = 0
+		const step = (now: number) => {
+			const t = Math.min(1, (now - mulai) / durasi)
+			const e = 1 - Math.pow(1 - t, 4)
+			angkaTampil = Math.round(target * e)
+			if (t < 1) raf = requestAnimationFrame(step)
+		}
+		raf = requestAnimationFrame(step)
+		return () => cancelAnimationFrame(raf)
+	})
 
 	// ----- Grafik batang dua arah: masuk ke atas, keluar ke bawah -----
 	const W = 640
@@ -42,65 +115,25 @@
 </svelte:head>
 
 <section class="hero">
-	<h1>{sapaan}, {data.profile.nama}</h1>
-	<p>
-		Login sebagai
-		<span class="badge" class:admin={data.profile.role === 'admin'}>
-			{data.profile.role === 'admin' ? 'Admin / Pemilik' : 'Staff'}
-		</span>
-	</p>
+	<p class="sapaan">{sapaan}, {data.profile.nama}.</p>
+	<h1>
+		<span class="figure" class:kritis={hero.kritis}>{formatJumlah(angkaTampil)}</span>
+		<span class="kalimat">{hero.kalimat}</span>
+	</h1>
+	<p class="kualifikasi">{hero.kualifikasi}</p>
+	<a class="btn btn--ghost" href={hero.cta.href}>{hero.cta.label} →</a>
 </section>
 
-<section class="stats">
-	<div class="stat">
-		<span class="angka">{data.totalBahan}</span>
-		<span class="label">Jenis Bahan Baku</span>
-	</div>
-	<div class="stat" class:merah={data.kritis.length > 0}>
-		<span class="angka">{data.kritis.length}</span>
-		<span class="label">Stok di Bawah Minimum</span>
-	</div>
-	<div class="stat" class:merah={data.notifBelumDibaca > 0}>
-		<span class="angka">{data.notifBelumDibaca}</span>
-		<span class="label">Notifikasi Belum Dibaca</span>
-	</div>
-	<div class="stat">
-		<span class="angka">{data.masukHariIni}</span>
-		<span class="label">Masuk Hari Ini</span>
-	</div>
-	<div class="stat">
-		<span class="angka">{data.keluarHariIni}</span>
-		<span class="label">Keluar Hari Ini</span>
-	</div>
-</section>
+<ul class="metrik" style="--kolom: {metrik.length}">
+	{#each metrik as m (m.label)}
+		<li class:nol={m.nol}>
+			<span class="nilai">{formatJumlah(m.nilai)}</span>
+			<span class="label">{m.label}</span>
+		</li>
+	{/each}
+</ul>
 
-<section class="panel">
-	<h2>Pergerakan stok — 14 hari terakhir</h2>
-	{#if data.grafik.every((g) => g.masuk === 0 && g.keluar === 0)}
-		<p class="kosong">Belum ada transaksi dalam 14 hari terakhir — grafik akan terisi seiring pencatatan.</p>
-	{:else}
-		<figure class="grafik">
-			<svg viewBox="0 0 {W} {H}" role="img" aria-label="Grafik batang jumlah barang masuk dan keluar per hari, 14 hari terakhir">
-				<line x1="0" y1={MID} x2={W} y2={MID} class="axis" />
-				{#each batang as b (b.label)}
-					{#if b.masuk.h > 0}
-						<rect x={b.x} y={b.masuk.y} width={b.w} height={b.masuk.h} rx="1" class="batang-masuk" />
-					{/if}
-					{#if b.keluar.h > 0}
-						<rect x={b.x} y={b.keluar.y} width={b.w} height={b.keluar.h} rx="1" class="batang-keluar" />
-					{/if}
-				{/each}
-			</svg>
-			<figcaption>
-				<span class="legenda"><i class="titik masuk"></i> masuk (qty)</span>
-				<span class="legenda"><i class="titik keluar"></i> keluar (qty)</span>
-				<span class="rentang">14 hari · total masuk {formatJumlah(data.grafik.reduce((a, g) => a + g.masuk, 0))} · total keluar {formatJumlah(data.grafik.reduce((a, g) => a + g.keluar, 0))}</span>
-			</figcaption>
-		</figure>
-	{/if}
-</section>
-
-<section class="panel">
+<section class="sksi">
 	<h2>Peringatan Stok Minimum</h2>
 
 	{#if data.kritis.length === 0}
@@ -129,7 +162,11 @@
 							<td class="num">{formatJumlah(b.stokAktual)} {b.satuan}</td>
 							<td class="num">{formatJumlah(b.stokMinimum)} {b.satuan}</td>
 							<td>
-								<span class="badge" class:habis={b.stokAktual === 0}>
+								<span
+									class="badge"
+									class:badge--danger={b.stokAktual === 0}
+									class:badge--warn={b.stokAktual !== 0}
+								>
 									{b.stokAktual === 0 ? 'habis' : 'menipis'}
 								</span>
 							</td>
@@ -138,90 +175,143 @@
 				</tbody>
 			</table>
 		</div>
-		<p class="lihat-monitoring">
-			Saran jumlah pengadaan tersedia di <a href="/monitoring">Monitoring</a>.
-		</p>
+	{/if}
+</section>
+
+<section class="sksi">
+	<h2>Pergerakan stok — 14 hari terakhir</h2>
+	{#if data.grafik.every((g) => g.masuk === 0 && g.keluar === 0)}
+		<p class="kosong">Belum ada transaksi dalam 14 hari terakhir — grafik akan terisi seiring pencatatan.</p>
+	{:else}
+		<figure class="grafik">
+			<svg viewBox="0 0 {W} {H}" role="img" aria-label="Grafik batang jumlah barang masuk dan keluar per hari, 14 hari terakhir">
+				<line x1="0" y1={MID} x2={W} y2={MID} class="axis" />
+				{#each batang as b (b.label)}
+					{#if b.masuk.h > 0}
+						<rect x={b.x} y={b.masuk.y} width={b.w} height={b.masuk.h} rx="1" class="batang-masuk" />
+					{/if}
+					{#if b.keluar.h > 0}
+						<rect x={b.x} y={b.keluar.y} width={b.w} height={b.keluar.h} rx="1" class="batang-keluar" />
+					{/if}
+				{/each}
+			</svg>
+			<figcaption>
+				<span class="legenda"><i class="titik masuk"></i> masuk (qty)</span>
+				<span class="legenda"><i class="titik keluar"></i> keluar (qty)</span>
+				<span class="rentang">14 hari · total masuk {formatJumlah(data.grafik.reduce((a, g) => a + g.masuk, 0))} · total keluar {formatJumlah(data.grafik.reduce((a, g) => a + g.keluar, 0))}</span>
+			</figcaption>
+		</figure>
 	{/if}
 </section>
 
 <style>
-	.hero h1 {
-		margin: 0 0 var(--space-3xs);
-		font-size: var(--text-xl);
-		color: var(--color-ink);
+	/* Hallmark · pre-emit critique: P5 H4 E5 S5 R5 V5 */
+	/* Hallmark · genre: editorial · macrostructure: Stat-Led · tone: utilitarian
+	 * theme: Almanac (override user: "pertahankan warna saja") · enrichment: none
+	 * nav: N3 side-rail (layout, di luar scope) · footer: none (halaman app)
+	 * audience: staf & pemilik kedai · use: pantau & tangani stok kritis
+	 * axes: paper-band: light (>85%) · display-style: roman-serif · accent-hue: warm (60°)
+	 * motion: number-tick hero (500ms ease-out; reduced-motion: final value)
+	 */
+
+	/* ---------- Hero: angka memimpin, kata melengkapi ---------- */
+	.hero {
+		margin-bottom: var(--space-xl);
 	}
 
-	.hero p {
-		margin: 0;
+	.sapaan {
 		color: var(--color-muted);
 		font-size: var(--text-sm);
+		margin-bottom: var(--space-sm);
 	}
 
-	.badge {
-		display: inline-block;
-		background: var(--color-paper-3);
-		color: var(--color-muted);
-		border-radius: var(--radius-sm);
-		padding: var(--space-3xs) var(--space-sm);
-		font-size: var(--text-xs);
-		font-weight: 400;
-	}
-
-	.badge.admin {
-		background: var(--color-paper);
-		color: var(--color-accent-deep);
-	}
-
-	.stats {
+	.hero h1 {
+		margin: 0;
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-		gap: var(--space-md);
-		margin: var(--space-xl) 0;
-	}
-
-	.stat {
-		background: var(--color-paper);
-		border: var(--rule-hair) solid var(--color-rule);
-		border-radius: var(--radius-sm);
-		padding: var(--space-lg) var(--space-xl);
-		display: flex;
-		flex-direction: column;
 		gap: var(--space-3xs);
 	}
 
-	.stat.merah {
-		border-color: var(--color-danger);
-	}
-
-	.angka {
+	.figure {
 		font-family: var(--font-display);
-		font-size: var(--text-2xl);
+		font-size: var(--text-stat);
 		font-weight: 600;
+		line-height: 1;
+		letter-spacing: -0.02em;
 		color: var(--color-ink);
 		font-variant-numeric: tabular-nums;
 	}
 
-	.stat.merah .angka {
+	.figure.kritis {
 		color: var(--color-danger);
 	}
 
-	.label {
+	.kalimat {
+		font-size: var(--text-xl);
+		line-height: 1.15;
+		max-width: 22ch;
+	}
+
+	.kualifikasi {
+		color: var(--color-muted);
+		font-size: var(--text-sm);
+		max-width: 52ch;
+		margin: var(--space-md) 0 var(--space-lg);
+	}
+
+	/* ---------- Strip metrik: hairline, bukan kartu ---------- */
+	.metrik {
+		list-style: none;
+		margin: 0 0 var(--space-2xl);
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(var(--kolom), minmax(0, 1fr));
+		border-block: var(--rule-hair) solid var(--color-rule);
+	}
+
+	.metrik li {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3xs);
+		padding: var(--space-md) var(--space-lg) var(--space-md) 0;
+	}
+
+	.metrik li + li {
+		border-left: var(--rule-hair) solid var(--color-rule);
+		padding-left: var(--space-lg);
+	}
+
+	.metrik .nilai {
+		font-size: var(--text-lg);
+		font-weight: 700;
+		color: var(--color-ink);
+		font-variant-numeric: tabular-nums;
+		line-height: 1.2;
+	}
+
+	.metrik li.nol .nilai {
+		color: var(--color-danger);
+	}
+
+	.metrik .label {
 		font-size: var(--text-xs);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-muted);
 	}
 
-	.panel {
-		background: var(--color-paper);
-		border: var(--rule-hair) solid var(--color-rule);
-		border-radius: var(--radius-sm);
-		padding: var(--space-lg) var(--space-xl);
-		margin-bottom: var(--space-lg);
+	/* ---------- Seksyen berhairline (tanpa kartu) ---------- */
+	.sksi {
+		margin-bottom: var(--space-2xl);
 	}
 
-	.panel h2 {
+	.sksi:last-child {
+		margin-bottom: 0;
+	}
+
+	.sksi h2 {
 		margin: 0 0 var(--space-md);
+		padding-bottom: var(--space-sm);
+		border-bottom: var(--rule-hair) solid var(--color-rule);
 		font-size: var(--text-md);
 		color: var(--color-ink);
 	}
@@ -230,26 +320,16 @@
 		color: var(--color-muted);
 		font-size: var(--text-sm);
 		margin: 0;
-		padding: var(--space-3xs) 0 var(--space-sm);
+		padding: var(--space-xs) 0;
 	}
 
 	.tabel-wrap {
 		overflow-x: auto;
 	}
 
-	.badge.habis {
-		background: var(--color-paper-2);
-		color: var(--color-danger);
-	}
-
-	.lihat-monitoring {
-		margin: var(--space-md) 0 0;
-		font-size: var(--text-sm);
-		color: var(--color-muted);
-	}
-
+	/* ---------- Grafik ---------- */
 	.grafik {
-		margin: 0;
+		margin: var(--space-md) 0 0;
 	}
 
 	.grafik svg {
@@ -303,5 +383,26 @@
 
 	.rentang {
 		margin-left: auto;
+	}
+
+	/* ---------- Responsif ---------- */
+	@media (max-width: 40rem) {
+		.metrik {
+			grid-template-columns: 1fr;
+		}
+
+		.metrik li {
+			padding: var(--space-sm) 0;
+		}
+
+		.metrik li + li {
+			border-left: none;
+			border-top: var(--rule-hair) solid var(--color-rule);
+			padding-left: 0;
+		}
+
+		.rentang {
+			margin-left: 0;
+		}
 	}
 </style>

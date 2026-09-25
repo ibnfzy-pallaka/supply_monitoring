@@ -5,19 +5,18 @@
 	let { data, children } = $props()
 
 	const nav = [
-		{ href: '/dashboard', label: 'Dashboard', adminOnly: false },
-		{ href: '/bahan-baku', label: 'Bahan Baku', adminOnly: false },
-		{ href: '/kategori', label: 'Kategori', adminOnly: false },
-		{ href: '/supplier', label: 'Supplier', adminOnly: false },
-		{ href: '/transaksi', label: 'Transaksi', adminOnly: false },
-		{ href: '/monitoring', label: 'Monitoring', adminOnly: false },
-		{ href: '/laporan', label: 'Laporan', adminOnly: false },
-		{ href: '/notifikasi', label: 'Notifikasi', adminOnly: false },
-		{ href: '/users', label: 'Manajemen User', adminOnly: true },
-		{ href: '/audit', label: 'Log Aktivitas', adminOnly: true }
+		{ href: '/dashboard', label: 'Dashboard', ownerOnly: false },
+		{ href: '/bahan-baku', label: 'Bahan Baku', ownerOnly: false },
+		{ href: '/kategori', label: 'Kategori', ownerOnly: false },
+		{ href: '/supplier', label: 'Supplier', ownerOnly: false },
+		{ href: '/transaksi', label: 'Transaksi', ownerOnly: false },
+		{ href: '/monitoring', label: 'Monitoring', ownerOnly: false },
+		{ href: '/laporan', label: 'Laporan', ownerOnly: false },
+		{ href: '/notifikasi', label: 'Notifikasi', ownerOnly: false },
+		{ href: '/users', label: 'Manajemen User', ownerOnly: true }
 	]
 
-	const visibleNav = $derived(nav.filter((n) => !n.adminOnly || data.profile.role === 'admin'))
+	const visibleNav = $derived(nav.filter((n) => !n.ownerOnly || data.profile.role === 'owner'))
 	const current = $derived(page.url.pathname)
 </script>
 
@@ -45,8 +44,10 @@
 					class:active={current === item.href || (item.href !== '/dashboard' && current.startsWith(item.href + '/'))}
 				>
 					{item.label}
-					{#if item.href === '/notifikasi' && data.notifBelumDibaca > 0}
-						<span class="notif-badge">{data.notifBelumDibaca}</span>
+					{#if item.href === '/notifikasi'}
+						<span class="notif-badge" class:notif-badge--nol={data.notifBelumDibaca === 0}>
+							{data.notifBelumDibaca ?? 0}
+						</span>
 					{/if}
 				</a>
 			{/each}
@@ -55,7 +56,7 @@
 		<div class="userbox">
 			<a class="who" href="/profil" title="Profil & ganti password">
 				<strong>{data.profile.nama}</strong>
-				<span>{data.profile.role === 'admin' ? 'Admin' : 'Staff'} · Profil</span>
+				<span>{data.profile.role === 'owner' ? 'Owner' : 'Staff'} · Profil</span>
 			</a>
 			<form
 				method="POST"
@@ -148,8 +149,8 @@
 	.notif-badge {
 		display: inline-block;
 		margin-left: auto;
-		background: var(--color-accent);
-		color: var(--color-accent-ink);
+		background: var(--color-mocha);
+		color: var(--color-paper);
 		font-size: var(--text-xs);
 		font-weight: 700;
 		min-width: 1.4em;
@@ -157,6 +158,12 @@
 		border-radius: 999px;
 		text-align: center;
 		line-height: 1.4;
+	}
+
+	.notif-badge--nol {
+		background: var(--color-ink-2);
+		color: var(--color-rule);
+		font-weight: 400;
 	}
 
 	.userbox {

@@ -154,7 +154,7 @@
 			<!-- 1×1 -->
 			<article class="cell">
 				<h3>Hak akses dua peran</h3>
-				<p>Admin melihat semuanya; staff mencatat transaksi dan memantau stok. Menu menyesuaikan peran yang masuk.</p>
+				<p>Owner melihat semuanya; staff mencatat transaksi dan memantau stok. Menu menyesuaikan peran yang masuk.</p>
 			</article>
 
 			<!-- 1×1 -->

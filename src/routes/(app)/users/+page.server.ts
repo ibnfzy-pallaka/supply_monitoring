@@ -15,13 +15,21 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (error) console.error('Manajemen user: gagal memuat:', error.message)
 
 	return {
-		users: (data ?? []).map((u) => ({
-			id: u.id as string,
-			email: u.email as string,
-			nama: u.nama as string,
-			role: u.role as 'admin' | 'staff',
-			aktif: u.aktif as boolean
-		}))
+		users: (data ?? []).map((u) => {
+			const rawEmail = (u.email as string) ?? ''
+			const username = rawEmail.endsWith('@waskita.local')
+				? rawEmail.replace('@waskita.local', '')
+				: rawEmail
+			const dbRole = u.role as string
+			const role = (dbRole === 'admin' ? 'owner' : dbRole) as 'owner' | 'staff'
+			return {
+				id: u.id as string,
+				username,
+				nama: u.nama as string,
+				role,
+				aktif: u.aktif as boolean
+			}
+		})
 	}
 }
 
@@ -31,13 +39,17 @@ export const actions: Actions = {
 		const fd = await request.formData()
 
 		const nama = ambil(fd, 'nama')
-		const email = ambil(fd, 'email').toLowerCase()
+		const username = ambil(fd, 'username').toLowerCase().replace(/\s+/g, '')
 		const password = String(fd.get('password') ?? '')
-		const role = ambil(fd, 'role') === 'admin' ? 'admin' : 'staff'
+		const roleInput = ambil(fd, 'role')
+		const role = roleInput === 'owner' || roleInput === 'admin' ? 'admin' : 'staff'
+		const displayRole = role === 'admin' ? 'owner' : 'staff'
 
-		if (!nama || !email) return fail(400, { message: 'Nama dan email wajib diisi.' })
+		if (!nama || !username) return fail(400, { message: 'Nama dan username wajib diisi.' })
 		if (password.length < 6)
 			return fail(400, { message: 'Password minimal 6 karakter.' })
+
+		const email = username.includes('@') ? username : `${username}@waskita.local`
 
 		const admin = getSupabaseAdminClient()
 		const { data: baru, error } = await admin.auth.admin.createUser({
@@ -49,16 +61,16 @@ export const actions: Actions = {
 		if (error || !baru.user)
 			return fail(400, { message: error?.message ?? 'Gagal membuat akun.' })
 
-		// Trigger DB membuat profil default 'staff' — naikkan bila diminta admin.
+		// Trigger DB membuat profil default 'staff' — naikkan bila diminta owner.
 		if (role === 'admin') {
 			const { error: roleErr } = await locals.supabase
 				.from('profiles')
 				.update({ role: 'admin' })
 				.eq('id', baru.user.id)
-			if (roleErr) return fail(400, { message: 'Akun dibuat, tetapi peran admin gagal diset.' })
+			if (roleErr) return fail(400, { message: 'Akun dibuat, tetapi peran owner gagal diset.' })
 		}
 
-		return { created: `Akun ${email} dibuat sebagai ${role === 'admin' ? 'admin' : 'staff'}.` }
+		return { created: `Akun ${username} dibuat sebagai ${displayRole}.` }
 	},
 
 	update: async ({ locals, request }) => {
@@ -67,15 +79,16 @@ export const actions: Actions = {
 
 		const id = ambil(fd, 'id')
 		const nama = ambil(fd, 'nama')
-		const role = ambil(fd, 'role') === 'admin' ? 'admin' : 'staff'
+		const roleInput = ambil(fd, 'role')
+		const role = roleInput === 'owner' || roleInput === 'admin' ? 'admin' : 'staff'
 		const aktif = fd.get('aktif') === 'on'
 
 		if (!id || !nama) return fail(400, { message: 'Nama wajib diisi.' })
 
-		// Cegah admin mengunci akunnya sendiri.
-		if (id === user.id && (role !== profile.role || !aktif))
+		// Cegah owner mengunci akunnya sendiri.
+		if (id === user.id && (role !== (profile.role === 'owner' ? 'admin' : profile.role) || !aktif))
 			return fail(400, {
-				message: 'Anda tidak bisa mengubah peran/status akun sendiri — minta admin lain.'
+				message: 'Anda tidak bisa mengubah peran/status akun sendiri — minta owner lain.'
 			})
 
 		const { error } = await locals.supabase

@@ -4,12 +4,12 @@
 	let { form, data } = $props()
 
 	let error = $state<string | null>(null)
-	let email = $state('')
+	let username = $state('')
 	let mengirim = $state(false)
 
 	$effect(() => {
 		error = form?.error ?? null
-		email = form?.email ?? ''
+		username = form?.username ?? ''
 	})
 </script>
 
@@ -29,7 +29,7 @@
 		</div>
 
 		{#if data.nonaktif}
-			<div class="alert warn">Sesi berakhir karena akun dinonaktifkan. Hubungi admin bila ini keliru.</div>
+			<div class="alert warn">Sesi berakhir karena akun dinonaktifkan. Hubungi owner bila ini keliru.</div>
 		{/if}
 		{#if error}
 			<div class="alert error" role="alert">{error}</div>
@@ -47,8 +47,8 @@
 			}}
 		>
 			<label>
-				Alamat email
-				<input class="input" type="email" name="email" value={email} required autocomplete="username" placeholder="nama@email.com" />
+				Username
+				<input class="input" type="text" name="username" value={username} required autocomplete="username" placeholder="Masukkan username" />
 			</label>
 			<label>
 				Password
