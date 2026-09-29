@@ -31,6 +31,13 @@ export function embedPertama<T>(x: unknown): T | undefined {
 	return x as T
 }
 
+export type Peran = 'owner' | 'staff'
+
+/** Label peran untuk tampilan UI (nilai DB tetap 'admin'/'staff'). */
+export function labelPeran(role: string | null | undefined): string {
+	return role === 'owner' ? 'Owner' : 'Admin Gudang'
+}
+
 export type StatusStok = 'habis' | 'menipis' | 'aman'
 
 export function statusStok(aktual: number, minimum: number): StatusStok {

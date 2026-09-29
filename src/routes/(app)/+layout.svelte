@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms'
 	import { page } from '$app/state'
+	import { labelPeran } from '$lib/format'
 
 	let { data, children } = $props()
 
@@ -107,7 +108,7 @@
 		<div class="userbox">
 			<a class="who" href="/profil" title="Profil & ganti password" onclick={() => (menuTerbuka = false)}>
 				<strong>{data.profile.nama}</strong>
-				<span>{data.profile.role === 'owner' ? 'Owner' : 'Staff'} · Profil</span>
+				<span>{labelPeran(data.profile.role)} · Profil</span>
 			</a>
 			<form
 				method="POST"

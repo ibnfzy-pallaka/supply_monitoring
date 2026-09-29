@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import Modal from '$lib/components/Modal.svelte'
+	import { labelPeran } from '$lib/format'
 
 	let { data, form } = $props()
 
@@ -33,7 +34,7 @@
 	<div>
 		<h1>Manajemen User</h1>
 		<p class="sub">
-			Tambah akun, ubah peran (owner/staff), nonaktifkan, dan reset password karyawan.
+			Tambah akun, ubah peran (owner/admin gudang), nonaktifkan, dan reset password karyawan.
 		</p>
 	</div>
 	<a class="btn" href="/users?modal=tambah">Tambah user</a>
@@ -70,7 +71,7 @@
 							<td>{u.nama}</td>
 							<td><code>{u.username}</code></td>
 							<td>
-								<span class="badge {u.role === 'owner' ? 'badge--danger' : 'badge--warn'}">{u.role}</span>
+								<span class="badge {u.role === 'owner' ? 'badge--danger' : 'badge--warn'}">{labelPeran(u.role)}</span>
 							</td>
 							<td>
 								<span class="badge {u.aktif ? 'badge--ok' : 'badge--danger'}">
@@ -135,7 +136,7 @@
 			Peran
 			<select class="input" name="role">
 				<option value="staff" selected={editing?.role === 'staff'}>
-					Staff — input transaksi &amp; lihat stok
+					Admin Gudang — input transaksi &amp; lihat stok
 				</option>
 				<option value="owner" selected={editing?.role === 'owner'}>
 					Owner / Pemilik — akses penuh

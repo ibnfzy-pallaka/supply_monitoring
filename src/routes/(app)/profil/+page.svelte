@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import Modal from '$lib/components/Modal.svelte'
+	import { labelPeran } from '$lib/format'
 
 	let { data, form } = $props()
 
@@ -55,7 +56,7 @@
 		</div>
 		<div>
 			<dt>Hak Akses / Peran</dt>
-			<dd>{data.profile.role === 'owner' ? 'Owner / Pemilik' : 'Staff'}</dd>
+			<dd>{data.profile.role === 'owner' ? 'Owner / Pemilik' : 'Admin Gudang'}</dd>
 		</div>
 	</dl>
 
