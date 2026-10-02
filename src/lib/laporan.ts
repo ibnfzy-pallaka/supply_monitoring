@@ -3,12 +3,20 @@ import { embedPertama } from '$lib/format'
 
 export type JenisLaporan = 'masuk' | 'keluar' | 'persediaan'
 
+export type SumberPembayaran = 'tunai' | 'transfer'
+
+/** Label ramah untuk sumber pembayaran. */
+export function labelPembayaran(v: string | null | undefined): string {
+	return v === 'transfer' ? 'Transfer' : 'Tunai'
+}
+
 export type BarisMasuk = {
 	tanggal: string
 	kode: string
 	bahan: string
 	satuan: string
 	supplier: string
+	pembayaran: SumberPembayaran
 	qty: number
 	harga: number
 	subtotal: number
@@ -81,7 +89,9 @@ export async function buatLaporan(
 	if (params.jenis === 'masuk') {
 		const { data, error } = await supabase
 			.from('transaksi_masuk')
-			.select('tanggal, qty, harga_satuan, bahan_baku(kode, nama, satuan), supplier(nama)')
+			.select(
+				'tanggal, qty, harga_satuan, sumber_pembayaran, bahan_baku(kode, nama, satuan), supplier(nama)'
+			)
 			.gte('tanggal', dari)
 			.lte('tanggal', sampai)
 			.order('tanggal')
@@ -99,6 +109,7 @@ export async function buatLaporan(
 				bahan: bahan?.nama ?? '—',
 				satuan: bahan?.satuan ?? '',
 				supplier: sup?.nama ?? '—',
+				pembayaran: (t.sumber_pembayaran as SumberPembayaran | null) ?? 'tunai',
 				qty,
 				harga,
 				subtotal: qty * harga

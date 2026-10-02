@@ -70,6 +70,19 @@
 						{/each}
 					</select>
 				</label>
+				<fieldset class="field field--full sumber">
+					<legend>Sumber pembayaran</legend>
+					<div class="sumber__pilihan">
+						<label class="sumber__opsi">
+							<input type="radio" name="sumber_pembayaran" value="tunai" checked />
+							Tunai
+						</label>
+						<label class="sumber__opsi">
+							<input type="radio" name="sumber_pembayaran" value="transfer" />
+							Transfer
+						</label>
+					</div>
+				</fieldset>
 				<label class="field">
 					Qty masuk
 					<input class="input" type="number" name="qty" min="0.01" step="any" required placeholder="0" />
@@ -104,6 +117,7 @@
 							<SortableTh kolom="tanggal" aktif={sortKey} dir={sortDir} klik={gantiSort}>Tanggal</SortableTh>
 							<SortableTh kolom="bahanNama" aktif={sortKey} dir={sortDir} klik={gantiSort}>Bahan</SortableTh>
 							<SortableTh kolom="supplierNama" aktif={sortKey} dir={sortDir} klik={gantiSort}>Supplier</SortableTh>
+							<SortableTh kolom="sumberPembayaran" aktif={sortKey} dir={sortDir} klik={gantiSort}>Pembayaran</SortableTh>
 							<SortableTh kolom="qty" aktif={sortKey} dir={sortDir} klik={gantiSort} numeric>Qty</SortableTh>
 							<SortableTh kolom="hargaSatuan" aktif={sortKey} dir={sortDir} klik={gantiSort} numeric>Harga</SortableTh>
 							<th class="num">Subtotal</th>
@@ -115,6 +129,11 @@
 								<td>{formatTanggal(t.tanggal)}</td>
 								<td>{t.bahanNama}</td>
 								<td>{t.supplierNama}</td>
+								<td>
+									<span class="badge badge--{t.sumberPembayaran === 'transfer' ? 'warn' : 'ok'}">
+										{t.sumberPembayaran}
+									</span>
+								</td>
 								<td class="num">+{formatJumlah(t.qty)} {t.satuan}</td>
 								<td class="num">{formatRupiah(t.hargaSatuan)}</td>
 								<td class="num">{formatRupiah(t.qty * t.hargaSatuan)}</td>
@@ -146,6 +165,31 @@
 		font-size: var(--text-sm);
 		color: var(--color-muted);
 		text-align: right;
+	}
+
+	.sumber {
+		border: 0;
+		padding: 0;
+		margin: 0;
+	}
+
+	.sumber legend {
+		padding: 0;
+		font-size: var(--text-sm);
+		color: var(--color-muted);
+	}
+
+	.sumber__pilihan {
+		display: flex;
+		gap: var(--space-md);
+		margin-top: var(--space-2xs);
+	}
+
+	.sumber__opsi {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2xs);
+		cursor: pointer;
 	}
 
 	@media (max-width: 60rem) {

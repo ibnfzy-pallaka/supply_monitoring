@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit'
 import { requireUser } from '$lib/auth'
 import { angka, ambil, embedPertama, pesanDb } from '$lib/format'
+import type { SumberPembayaran } from '$lib/laporan'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -10,7 +11,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		locals.supabase
 			.from('transaksi_masuk')
 			.select(
-				'id, tanggal, qty, harga_satuan, keterangan, bahan_baku(nama, satuan), supplier(nama), dibuat_oleh'
+				'id, tanggal, qty, harga_satuan, keterangan, sumber_pembayaran, bahan_baku(nama, satuan), supplier(nama), dibuat_oleh'
 			)
 			.order('tanggal', { ascending: true })
 			.order('created_at', { ascending: true })
@@ -31,6 +32,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				qty: Number(t.qty),
 				hargaSatuan: Number(t.harga_satuan),
 				keterangan: (t.keterangan as string | null) ?? '',
+				sumberPembayaran: (t.sumber_pembayaran as SumberPembayaran | null) ?? 'tunai',
 				bahanNama: bahan?.nama ?? '—',
 				satuan: bahan?.satuan ?? '',
 				supplierNama: sup?.nama ?? '—'
@@ -52,6 +54,8 @@ export const actions: Actions = {
 		const qty = angka(fd, 'qty')
 		const hargaSatuan = angka(fd, 'harga_satuan')
 		const keterangan = ambil(fd, 'keterangan')
+		const sumberInput = ambil(fd, 'sumber_pembayaran')
+		const sumberPembayaran: SumberPembayaran = sumberInput === 'transfer' ? 'transfer' : 'tunai'
 
 		if (!tanggal || !bahanId) return fail(400, { message: 'Tanggal dan bahan wajib dipilih.' })
 		if (qty === null || qty <= 0) return fail(400, { message: 'Qty harus lebih dari 0.' })
@@ -65,6 +69,7 @@ export const actions: Actions = {
 			qty,
 			harga_satuan: hargaSatuan,
 			keterangan: keterangan || null,
+			sumber_pembayaran: sumberPembayaran,
 			dibuat_oleh: user.id
 		})
 		if (error) return fail(400, { message: pesanDb(error) })

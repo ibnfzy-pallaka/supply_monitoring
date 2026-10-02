@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state'
 	import { formatJumlah, formatRupiah, formatTanggal } from '$lib/format'
-	import { judulLaporan } from '$lib/laporan'
+	import { judulLaporan, labelPembayaran } from '$lib/laporan'
 
 	let { data } = $props()
 
@@ -76,6 +76,7 @@
 							<th>Kode</th>
 							<th>Bahan</th>
 							<th>Supplier</th>
+							<th>Pembayaran</th>
 							<th class="num">Qty</th>
 							<th class="num">Harga</th>
 							<th class="num">Subtotal</th>
@@ -88,6 +89,7 @@
 								<td>{r.kode}</td>
 								<td>{r.bahan}</td>
 								<td>{r.supplier}</td>
+								<td>{labelPembayaran(r.pembayaran)}</td>
 								<td class="num">{formatJumlah(r.qty)} {r.satuan}</td>
 								<td class="num">{formatRupiah(r.harga)}</td>
 								<td class="num">{formatRupiah(r.subtotal)}</td>
@@ -96,7 +98,7 @@
 					</tbody>
 					<tfoot>
 						<tr>
-							<th colspan="4" class="num">
+							<th colspan="5" class="num">
 								{laporan.jumlahTransaksi} transaksi · total {formatJumlah(laporan.totalQty)}
 							</th>
 							<th colspan="2" class="num">Total nilai masuk</th>
