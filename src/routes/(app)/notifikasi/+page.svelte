@@ -5,8 +5,10 @@
 	let { data, form } = $props()
 
 	let mengirim = $state(false)
+	let idProses = $state<string | null>(null)
 
 	const belum = $derived(data.notifikasi.filter((n) => !n.dibaca))
+	const jumlahPengajuan = $derived(data.pengajuan?.length ?? 0)
 </script>
 
 <svelte:head>
@@ -19,6 +21,7 @@
 		<p class="sub">
 			Peringatan otomatis saat stok bahan menyentuh atau melewati batas minimum.
 			{#if belum.length > 0}Ada {belum.length} belum dibaca.{/if}
+			{#if jumlahPengajuan > 0}Ada {jumlahPengajuan} pengajuan reset password menunggu persetujuan.{/if}
 		</p>
 	</div>
 	{#if belum.length > 0}
@@ -45,6 +48,76 @@
 {/if}
 {#if form?.success}
 	<div class="alert alert--ok" role="status">{form.success}</div>
+{/if}
+
+{#if data.adalahOwner}
+	<section class="panel panel--ajuan">
+		<h2 class="sub-judul">Pengajuan Reset Password</h2>
+		{#if data.pengajuan.length === 0}
+			<p class="kosong">Tidak ada pengajuan reset password yang menunggu.</p>
+		{:else}
+			<ul class="daftar">
+				{#each data.pengajuan as p (p.id)}
+					<li class="item item--ajuan">
+						<div class="isi">
+							<p class="pesan">
+								{p.nama} (<code>{p.username}</code>) mengajukan reset password.
+							</p>
+							<p class="detail">
+								Disetujui → password direset ke <strong>12345678</strong>. Pengaju harus
+								segera menggantinya setelah masuk.
+							</p>
+							{#if p.catatan}<p class="detail">Catatan: {p.catatan}</p>{/if}
+						</div>
+						<div class="aksi-ajuan">
+							<form
+								method="POST"
+								action="?/setujui"
+								use:enhance={() => {
+									idProses = p.id
+									mengirim = true
+									return async ({ update }) => {
+										idProses = null
+										mengirim = false
+										await update()
+									}
+								}}
+							>
+								<input type="hidden" name="id" value={p.id} />
+								<button
+									class="btn btn--sm"
+									type="submit"
+									disabled={mengirim}
+									data-state={idProses === p.id && mengirim ? 'loading' : undefined}
+								>
+									Setujui &amp; reset
+								</button>
+							</form>
+							<form
+								method="POST"
+								action="?/tolak"
+								use:enhance={() => {
+									idProses = p.id
+									mengirim = true
+									return async ({ update }) => {
+										idProses = null
+										mengirim = false
+										await update()
+									}
+								}}
+							>
+								<input type="hidden" name="id" value={p.id} />
+								<input type="hidden" name="catatan" value="Ditolak oleh owner" />
+								<button class="btn btn--ghost btn--sm" type="submit" disabled={mengirim}>
+									Tolak
+								</button>
+							</form>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
 {/if}
 
 <section class="panel">
@@ -87,6 +160,34 @@
 </section>
 
 <style>
+	.panel--ajuan {
+		margin-bottom: var(--space-xl);
+	}
+
+	.sub-judul {
+		margin: 0 0 var(--space-md);
+		font-size: var(--text-md);
+	}
+
+	.aksi-ajuan {
+		display: flex;
+		gap: var(--space-xs);
+		flex-shrink: 0;
+	}
+
+	.aksi-ajuan form {
+		margin: 0;
+	}
+
+	.item--ajuan .pesan {
+		font-weight: 700;
+		color: var(--color-ink);
+	}
+
+	.item--ajuan .pesan code {
+		font-weight: 400;
+	}
+
 	.daftar {
 		list-style: none;
 		margin: 0;
@@ -156,6 +257,19 @@
 		.item form,
 		.sudah {
 			margin-left: auto;
+		}
+
+		.aksi-ajuan {
+			width: 100%;
+			margin-left: 0;
+		}
+
+		.aksi-ajuan form {
+			flex: 1;
+		}
+
+		.aksi-ajuan .btn {
+			width: 100%;
 		}
 	}
 </style>

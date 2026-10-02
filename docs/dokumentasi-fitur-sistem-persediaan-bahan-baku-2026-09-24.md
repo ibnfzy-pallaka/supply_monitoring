@@ -79,6 +79,7 @@ Berdasarkan proposal, permasalahan yang ada saat ini:
 | 1.2 | Manajemen User (CRUD)  | Admin dapat menambah, mengubah, nonaktifkan akun user.                                                | 4 jam    | - \[ \] |
 | 1.3 | Role &amp; Hak Akses   | Minimal 2 role: **Admin/Pemilik** (akses penuh) dan **Staff/Karyawan** (input transaksi, lihat stok). | 5 jam    | - \[ \] |
 | 1.4 | Reset / ganti password | Ganti password sendiri; admin reset password staff.                                                   | 2 jam    | - \[ \] |
+| 1.5 | Lupa password          | Admin Gudang lupa password → ajukan reset (cukup username) → muncul notifikasi di akun Owner → disetujui, password jadi `12345678`. Owner lupa → diarahkan hubungi developer. | 3 jam    | - \[x\] |
 
 
 ### 2. Master Data Bahan Baku
