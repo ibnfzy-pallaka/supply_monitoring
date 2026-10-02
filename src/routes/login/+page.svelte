@@ -1,11 +1,40 @@
 <script lang="ts">
+	/* Hallmark · macrostructure: Centered Auth (letter variant) · genre: editorial
+	 * theme: Almanac (system-managed — tokens.css) · enrichment: photo-scrim + interactive blur
+	 * nav: none · footer: none · contrast: pass (scrim 62% + paper-terang)
+	 * motion: parallax-pointer (≤20px) · scrim-breathe · card-blur-focus
+	 * motion-cut project: transform/opacity only · reduced-motion → crossfade 150ms
+	 * pre-emit critique: P5 H4 E5 S4 R5 V5
+	 */
 	import { enhance } from '$app/forms'
+	import { onMount } from 'svelte'
 
 	let { form, data } = $props()
 
 	let error = $state<string | null>(null)
 	let username = $state('')
 	let mengirim = $state(false)
+
+	/* Paralax halus — geser background mengikuti pointer. Hanya transform (gate).
+	   Nonaktif di touch (pointer: coarse) dan saat prefers-reduced-motion. */
+	let parallaxX = $state(0)
+	let parallaxY = $state(0)
+
+	onMount(() => {
+		const halus = window.matchMedia('(prefers-reduced-motion: reduce)')
+		const sentuh = window.matchMedia('(pointer: coarse)')
+		if (halus.matches || sentuh.matches) return
+
+		const MAKS = 20 // px — halus & terkendali
+		const onMove = (e: PointerEvent) => {
+			const nx = (e.clientX / window.innerWidth - 0.5) * 2
+			const ny = (e.clientY / window.innerHeight - 0.5) * 2
+			parallaxX = nx * MAKS
+			parallaxY = ny * MAKS
+		}
+		window.addEventListener('pointermove', onMove, { passive: true })
+		return () => window.removeEventListener('pointermove', onMove)
+	})
 
 	$effect(() => {
 		error = form?.error ?? null
@@ -18,6 +47,15 @@
 </svelte:head>
 
 <main class="login-wrap">
+	<!-- Lapisan foto + scrim gelap. Foto geser halus (paralax), scrim bernapas. -->
+	<div class="bg" aria-hidden="true">
+		<div
+			class="bg__foto"
+			style="transform: translate3d({parallaxX}px, {parallaxY}px, 0) scale(1.06)"
+		></div>
+		<div class="bg__scrim"></div>
+	</div>
+
 	<section class="card">
 		<div class="brand">
 			<svg class="logo" viewBox="0 0 24 24" aria-hidden="true">
@@ -64,19 +102,82 @@
 
 <style>
 	.login-wrap {
+		position: relative;
 		min-height: 100dvh;
 		display: grid;
 		place-items: center;
 		padding: clamp(var(--space-md), 4vw, var(--space-2xl));
-		background: var(--color-paper-2);
+		background: var(--color-ink); /* fallback sebelum foto load */
+		overflow: clip;
 	}
 
+	/* ---------- Latar foto + scrim ---------- */
+	.bg {
+		position: absolute;
+		inset: 0;
+		overflow: clip;
+		z-index: 0;
+	}
+
+	.bg__foto {
+		position: absolute;
+		/* lebih besar dari container agar geser paralax tak menampakkan tepi */
+		inset: -3%;
+		background-image: url('/login-bg.jpeg');
+		background-size: cover;
+		background-position: center;
+		will-change: transform;
+		transition: transform 320ms var(--ease-out);
+	}
+
+	.bg__scrim {
+		position: absolute;
+		inset: 0;
+		/* scrim gelap 68% + vignette tepi — jaga kontras & fokus ke kartu.
+		   linear-gradient overlay; warna via token (gate 48). */
+		background: radial-gradient(
+				120% 120% at 50% 42%,
+				transparent 0%,
+				color-mix(in oklch, var(--color-ink) 58%, transparent) 100%
+			),
+			color-mix(in oklch, var(--color-ink) 68%, transparent);
+		opacity: 1;
+		animation: scrim-breathe 11s var(--ease-in-out) infinite;
+	}
+
+	@keyframes scrim-breathe {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.88;
+		}
+	}
+
+	/* ---------- Kartu login — kaca di atas foto ---------- */
 	.card {
+		position: relative;
+		z-index: 1;
 		width: min(100%, 24rem);
-		background: var(--color-paper);
-		border: var(--rule-hair) solid var(--color-rule);
+		/* kertas Almanak semi-transparan + blur kaca (efek frosted glass) */
+		background: color-mix(in oklch, var(--color-paper) 82%, transparent);
+		backdrop-filter: blur(18px) saturate(1.15);
+		border: var(--rule-hair) solid color-mix(in oklch, var(--color-paper) 40%, transparent);
 		border-radius: var(--radius-sm);
 		padding: clamp(var(--space-lg), 5vw, var(--space-2xl)) clamp(var(--space-md), 5vw, var(--space-xl));
+		box-shadow: 0 18px 48px -18px color-mix(in oklch, var(--color-ink) 65%, transparent);
+		transition:
+			backdrop-filter var(--dur-long) var(--ease-out),
+			background-color var(--dur-long) var(--ease-out),
+			box-shadow var(--dur-long) var(--ease-out);
+	}
+
+	/* blur interactive — saat form difokus, kaca menebal & lebih opak */
+	.card:focus-within {
+		background: color-mix(in oklch, var(--color-paper) 90%, transparent);
+		backdrop-filter: blur(24px) saturate(1.2);
+		box-shadow: 0 22px 56px -18px color-mix(in oklch, var(--color-ink) 72%, transparent);
 	}
 
 	.brand {
@@ -113,13 +214,13 @@
 	}
 
 	.alert.error {
-		background: var(--color-paper-2);
+		background: color-mix(in oklch, var(--color-paper) 88%, transparent);
 		color: var(--color-danger);
 		border: var(--rule-hair) solid var(--color-danger);
 	}
 
 	.alert.warn {
-		background: var(--color-paper-2);
+		background: color-mix(in oklch, var(--color-paper) 88%, transparent);
 		color: var(--color-accent-deep);
 		border: var(--rule-hair) solid var(--color-rule);
 	}
@@ -134,10 +235,36 @@
 
 	.input {
 		margin-top: var(--space-3xs);
+		/* input di kaca — tetap solid agar teks terbaca penuh */
+		background: var(--color-paper);
 	}
 
 	button {
 		width: 100%;
 		margin-top: var(--space-2xs);
+	}
+
+	/* ---------- Mobile & reduced-motion ---------- */
+	@media (prefers-reduced-motion: reduce) {
+		.bg__foto {
+			transform: none !important;
+			transition: opacity 150ms var(--ease-out) !important;
+		}
+
+		.bg__scrim {
+			animation: none;
+		}
+
+		.card,
+		.card:focus-within {
+			transition: opacity 150ms var(--ease-out);
+		}
+	}
+
+	/* touch: tampilkan foto statis, blur lembut, tanpa parallax */
+	@media (pointer: coarse) {
+		.bg__foto {
+			transition: opacity 150ms var(--ease-out);
+		}
 	}
 </style>

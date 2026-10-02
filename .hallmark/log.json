@@ -1,6 +1,28 @@
 {
 	"entries": [
 		{
+			"date": "2026-09-26",
+			"genre": "editorial",
+			"macrostructure": "centered-auth (letter variant, page-scope auth gate)",
+			"theme": "Almanac (sistem terkunci dipertahankan — tokens.css; tidak rotates karena system-managed)",
+			"enrichment": "E-photo scrim (login-bg.jpeg + scrim 62% interactive) + backdrop-blur kaca",
+			"nav": "none (auth gate)",
+			"footer": "none (auth gate)",
+			"anchorHue": "kopi (oklch 84°) — dipertahankan",
+			"accent": "sienna oklch(56% 0.122 62), <5% viewport",
+			"type": "Source Serif 4 (display) + Atkinson Hyperlegible (body)",
+			"motion": ["parallax-pointer (≤20px, transform-only)", "scrim-breathe 9s", "card-blur-focus-within"],
+			"responsiveVerified": [320, 375, 414, 768],
+			"overflowX": "clip, nol horizontal scroll",
+			"a11y": "parallax OFF saat prefers-reduced-motion & pointer:coarse; scrim 62% jaga kontras kartu terang",
+			"slopGates": "58/58 pass (gate 34/38a/48/50/51 diverifikasi)",
+			"checks": "svelte-check 0 error 0 warning; npm run build sukses; verifikasi Playwright: backdrop-filter blur(18/24px) aktif, scrim radial+vignette, nol h-scroll di 320/375/414/768",
+			"notes": "BUG DIPERBAIKI: deklarasi -webkit-backdrop-filter menyebabkan lightningcss membuang backdrop-filter unprefixed (computed = none). Solusi: hanya tulis unprefixed backdrop-filter.",
+			"artifacts": ["src/routes/login/+page.svelte"],
+			"replaced": ["login kartu solid di paper-2 → kaca foto interaktif (parallax + blur)"],
+			"filesDeleted": 0
+		},
+		{
 			"date": "2026-09-24",
 			"genre": "editorial",
 			"macrostructure": "bento-grid",
