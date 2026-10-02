@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	let query = locals.supabase
 		.from('audit_log')
 		.select('id, aktor, aksi, tabel, record_id, data_lama, data_baru, created_at, profiles(nama)')
-		.order('created_at', { ascending: false })
+		.order('created_at', { ascending: true })
 		.limit(200)
 	if (filterTabel && TABEL_DIKETAHUI.includes(filterTabel)) query = query.eq('tabel', filterTabel)
 

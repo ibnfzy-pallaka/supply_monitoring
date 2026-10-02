@@ -12,8 +12,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.select(
 				'id, tanggal, stok_sistem, stok_fisik, selisih, alasan, bahan_baku(nama, satuan)'
 			)
-			.order('tanggal', { ascending: false })
-			.order('created_at', { ascending: false })
+			.order('tanggal', { ascending: true })
+			.order('created_at', { ascending: true })
 			.limit(100),
 		locals.supabase
 			.from('bahan_baku')

@@ -3,7 +3,9 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import Modal from '$lib/components/Modal.svelte'
+	import SortableTh from '$lib/components/SortableTh.svelte'
 	import { formatJumlah, formatTanggal, hariIni } from '$lib/format'
+	import { arahBerikut, sortir, type SortDir } from '$lib/sort'
 
 	let { data, form } = $props()
 
@@ -11,6 +13,16 @@
 	let bahanId = $state('')
 	let stokFisik = $state<string>('')
 	let pesanSukses = $state<string | null>(null)
+
+	// Default: tanggal (terlama) paling atas.
+	let sortKey = $state('tanggal')
+	let sortDir = $state<SortDir>('asc')
+	const opname = $derived(sortir(data.opname, sortKey, sortDir))
+
+	function gantiSort(kolom: string) {
+		sortDir = arahBerikut(sortKey, kolom, sortDir)
+		sortKey = kolom
+	}
 
 	const owner = $derived(data.profile.role === 'owner')
 	const modalBuka = $derived(owner && page.url.searchParams.get('modal') === 'opname')
@@ -67,16 +79,16 @@
 			<table class="table">
 				<thead>
 					<tr>
-						<th>Tanggal</th>
-						<th>Bahan</th>
-						<th class="num">Sistem</th>
-						<th class="num">Fisik</th>
-						<th class="num">Selisih</th>
-						<th>Alasan</th>
+						<SortableTh kolom="tanggal" aktif={sortKey} dir={sortDir} klik={gantiSort}>Tanggal</SortableTh>
+						<SortableTh kolom="bahanNama" aktif={sortKey} dir={sortDir} klik={gantiSort}>Bahan</SortableTh>
+						<SortableTh kolom="stokSistem" aktif={sortKey} dir={sortDir} klik={gantiSort} numeric>Sistem</SortableTh>
+						<SortableTh kolom="stokFisik" aktif={sortKey} dir={sortDir} klik={gantiSort} numeric>Fisik</SortableTh>
+						<SortableTh kolom="selisih" aktif={sortKey} dir={sortDir} klik={gantiSort} numeric>Selisih</SortableTh>
+						<SortableTh kolom="alasan" aktif={sortKey} dir={sortDir} klik={gantiSort}>Alasan</SortableTh>
 					</tr>
 				</thead>
 				<tbody>
-					{#each data.opname as o (o.id)}
+					{#each opname as o (o.id)}
 						<tr>
 							<td>{formatTanggal(o.tanggal)}</td>
 							<td>{o.bahanNama}</td>

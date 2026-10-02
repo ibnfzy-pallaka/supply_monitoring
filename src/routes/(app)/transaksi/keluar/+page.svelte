@@ -3,13 +3,25 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import Modal from '$lib/components/Modal.svelte'
+	import SortableTh from '$lib/components/SortableTh.svelte'
 	import { formatJumlah, formatTanggal, hariIni } from '$lib/format'
+	import { arahBerikut, sortir, type SortDir } from '$lib/sort'
 
 	let { data, form } = $props()
 
 	let mengirim = $state(false)
 	let bahanId = $state('')
 	let pesanSukses = $state<string | null>(null)
+
+	// Default: tanggal (terlama) paling atas.
+	let sortKey = $state('tanggal')
+	let sortDir = $state<SortDir>('asc')
+	const transaksi = $derived(sortir(data.transaksi, sortKey, sortDir))
+
+	function gantiSort(kolom: string) {
+		sortDir = arahBerikut(sortKey, kolom, sortDir)
+		sortKey = kolom
+	}
 
 	const modalBuka = $derived(page.url.searchParams.get('modal') === 'keluar')
 	const terpilih = $derived(data.bahan.find((b) => b.id === bahanId))
@@ -52,14 +64,14 @@
 			<table class="table">
 				<thead>
 					<tr>
-						<th>Tanggal</th>
-						<th>Bahan</th>
-						<th class="num">Qty</th>
-						<th>Keterangan</th>
+						<SortableTh kolom="tanggal" aktif={sortKey} dir={sortDir} klik={gantiSort}>Tanggal</SortableTh>
+						<SortableTh kolom="bahanNama" aktif={sortKey} dir={sortDir} klik={gantiSort}>Bahan</SortableTh>
+						<SortableTh kolom="qty" aktif={sortKey} dir={sortDir} klik={gantiSort} numeric>Qty</SortableTh>
+						<SortableTh kolom="keterangan" aktif={sortKey} dir={sortDir} klik={gantiSort}>Keterangan</SortableTh>
 					</tr>
 				</thead>
 				<tbody>
-					{#each data.transaksi as t (t.id)}
+					{#each transaksi as t (t.id)}
 						<tr>
 							<td>{formatTanggal(t.tanggal)}</td>
 							<td>{t.bahanNama}</td>

@@ -1,5 +1,18 @@
 <script lang="ts">
+	import SortableTh from '$lib/components/SortableTh.svelte'
+	import { arahBerikut, sortir, type SortDir } from '$lib/sort'
+
 	let { data } = $props()
+
+	// Default: tanggal buat (terlama) paling atas.
+	let sortKey = $state('waktu')
+	let sortDir = $state<SortDir>('asc')
+	const log = $derived(sortir(data.log, sortKey, sortDir))
+
+	function gantiSort(kolom: string) {
+		sortDir = arahBerikut(sortKey, kolom, sortDir)
+		sortKey = kolom
+	}
 
 	function urlTabel(t: string): string {
 		const q = new URLSearchParams()
@@ -37,7 +50,7 @@
 			<table class="table">
 				<thead>
 					<tr>
-						<th>Waktu</th>
+						<SortableTh kolom="waktu" aktif={sortKey} dir={sortDir} klik={gantiSort}>Waktu</SortableTh>
 						<th>Aksi</th>
 						<th>Tabel</th>
 						<th>Pelaku</th>
@@ -45,7 +58,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each data.log as l (l.id)}
+					{#each log as l (l.id)}
 						<tr>
 							<td class="waktu">{new Date(l.waktu).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })}</td>
 							<td><span class="badge {l.aksi === 'INSERT' ? 'badge--ok' : l.aksi === 'DELETE' ? 'badge--danger' : 'badge--warn'}">{l.aksi.toLowerCase()}</span></td>

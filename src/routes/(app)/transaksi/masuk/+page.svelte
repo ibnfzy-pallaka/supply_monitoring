@@ -1,13 +1,25 @@
 <script lang="ts">
 	import { enhance } from '$app/forms'
 	import { formatJumlah, formatRupiah, formatTanggal, hariIni } from '$lib/format'
+	import SortableTh from '$lib/components/SortableTh.svelte'
+	import { arahBerikut, sortir, type SortDir } from '$lib/sort'
 
 	let { data, form } = $props()
 
 	let mengirim = $state(false)
 
+	// Default: tanggal (terlama) paling atas.
+	let sortKey = $state('tanggal')
+	let sortDir = $state<SortDir>('asc')
+	const transaksi = $derived(sortir(data.transaksi, sortKey, sortDir))
+
+	function gantiSort(kolom: string) {
+		sortDir = arahBerikut(sortKey, kolom, sortDir)
+		sortKey = kolom
+	}
+
 	const total = $derived(
-		data.transaksi.reduce((acc, t) => acc + t.qty * t.hargaSatuan, 0)
+		transaksi.reduce((acc, t) => acc + t.qty * t.hargaSatuan, 0)
 	)
 </script>
 
@@ -89,16 +101,16 @@
 				<table class="table">
 					<thead>
 						<tr>
-							<th>Tanggal</th>
-							<th>Bahan</th>
-							<th>Supplier</th>
-							<th class="num">Qty</th>
-							<th class="num">Harga</th>
+							<SortableTh kolom="tanggal" aktif={sortKey} dir={sortDir} klik={gantiSort}>Tanggal</SortableTh>
+							<SortableTh kolom="bahanNama" aktif={sortKey} dir={sortDir} klik={gantiSort}>Bahan</SortableTh>
+							<SortableTh kolom="supplierNama" aktif={sortKey} dir={sortDir} klik={gantiSort}>Supplier</SortableTh>
+							<SortableTh kolom="qty" aktif={sortKey} dir={sortDir} klik={gantiSort} numeric>Qty</SortableTh>
+							<SortableTh kolom="hargaSatuan" aktif={sortKey} dir={sortDir} klik={gantiSort} numeric>Harga</SortableTh>
 							<th class="num">Subtotal</th>
 						</tr>
 					</thead>
 					<tbody>
-						{#each data.transaksi as t (t.id)}
+						{#each transaksi as t (t.id)}
 							<tr>
 								<td>{formatTanggal(t.tanggal)}</td>
 								<td>{t.bahanNama}</td>
