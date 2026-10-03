@@ -8,6 +8,16 @@
 
 	let mengirim = $state(false)
 
+	// Harga master terisi otomatis saat bahan dipilih (masih bisa diubah manual).
+	let bahanId = $state('')
+	let hargaSatuan = $state('0')
+
+	function pilihBahan(e: Event) {
+		bahanId = (e.currentTarget as HTMLSelectElement).value
+		const b = data.bahan.find((x) => x.id === bahanId)
+		if (b) hargaSatuan = String(b.harga_satuan)
+	}
+
 	// Default: tanggal (terlama) paling atas.
 	let sortKey = $state('tanggal')
 	let sortDir = $state<SortDir>('asc')
@@ -54,7 +64,7 @@
 				</label>
 				<label class="field">
 					Bahan baku
-					<select class="input" name="bahan_baku_id" required>
+					<select class="input" name="bahan_baku_id" value={bahanId} onchange={pilihBahan} required>
 						<option value="" disabled selected>Pilih bahan…</option>
 						{#each data.bahan as b (b.id)}
 							<option value={b.id}>{b.nama} ({b.kode})</option>
@@ -89,7 +99,16 @@
 				</label>
 				<label class="field">
 					Harga satuan (Rp)
-					<input class="input" type="number" name="harga_satuan" min="0" step="any" value="0" required />
+					<span class="hint">Terisi otomatis dari harga bahan, bisa diubah</span>
+					<input
+						class="input"
+						type="number"
+						name="harga_satuan"
+						min="0"
+						step="any"
+						bind:value={hargaSatuan}
+						required
+					/>
 				</label>
 				<label class="field field--full">
 					Keterangan <span class="hint">(opsional)</span>

@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.order('tanggal', { ascending: true })
 			.order('created_at', { ascending: true })
 			.limit(100),
-		locals.supabase.from('bahan_baku').select('id, kode, nama, satuan').order('nama'),
+		locals.supabase.from('bahan_baku').select('id, kode, nama, satuan, harga_satuan').order('nama'),
 		locals.supabase.from('supplier').select('id, nama').order('nama')
 	])
 
