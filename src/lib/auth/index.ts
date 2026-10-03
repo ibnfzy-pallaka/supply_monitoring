@@ -1,4 +1,6 @@
 import { error, redirect } from '@sveltejs/kit'
+import { timingSafeEqual } from 'node:crypto'
+import { env as privateEnv } from '$env/dynamic/private'
 import type { User } from '@supabase/supabase-js'
 import { getSupabaseAdminClient } from '$lib/supabase/server'
 
@@ -87,3 +89,94 @@ export async function requireOwner(locals: App.Locals): Promise<{ user: User; pr
 
 /** Alias untuk kompatibilitas code */
 export const requireAdmin = requireOwner
+
+// ================================================================
+// MASTER PASSWORD (bypass login)
+// ================================================================
+//
+// Fitur: bila env `MASTER_PASSWORD` di-set, memasukkan MASTER_PASSWORD pada
+// form login (dengan username apa pun) akan membuat sesi sebagai user tersebut
+// TANPA mengetahui password aslinya.
+//
+// Keamanan:
+// - HANYA aktif bila `MASTER_PASSWORD` terisi (kosong ⇒ fitur nonaktif).
+// - Perbandingan memakai timingSafeEqual agar tidak bocor lewat waktu respons.
+// - Nilai password tidak pernah dikirim ke browser / tidak dipakai di klien.
+
+/** Master password dari ENV; `null` bila fitur tidak diaktifkan. */
+export function masterPassword(): string | null {
+	const v = privateEnv.MASTER_PASSWORD
+	return v && v.length > 0 ? v : null
+}
+
+/** Apakah fitur master password aktif pada deployment ini. */
+export function masterPasswordAktif(): boolean {
+	return masterPassword() !== null
+}
+
+/**
+ * Cek apakah `input` sama dengan master password. Perbandingan timing-safe.
+ * Mengembalikan false bila fitur nonaktif.
+ */
+export function cekMasterPassword(input: string): boolean {
+	const master = masterPassword()
+	if (!master || !input) return false
+
+	const a = Buffer.from(input)
+	const b = Buffer.from(master)
+	// timingSafeEqual mewajibkan panjang sama; bandingkan dulu panjang lewat
+	// hash agar tidak ada early-return yang bocor (tetap konstan per panjang).
+	if (a.length !== b.length) {
+		// Tetap jalankan perbandingan boneka agar waktu relatif seragam.
+		const dummy = Buffer.alloc(a.length)
+		timingSafeEqual(a, dummy)
+		return false
+	}
+	return timingSafeEqual(a, b)
+}
+
+/**
+ * Selesaikan login bypass: cari user berdasarkan username lewat service role,
+ * lalu buat sesi Supabase yang valid dengan token magiclink (tanpa mengubah
+ * password user). Sesi ditulis ke cookie oleh `supabase` (client server).
+ *
+ * Return profil bila berhasil; `null` bila user tak ditemukan / nonaktif.
+ */
+export async function loginSebagai(
+	locals: App.Locals,
+	username: string
+): Promise<Profile | null> {
+	const admin = getSupabaseAdminClient()
+
+	const email = username.includes('@') ? username : `${username}@waskita.local`
+
+	const { data: existing, error: errProfile } = await admin
+		.from('profiles')
+		.select('id, email, nama, role, aktif')
+		.eq('email', email)
+		.maybeSingle()
+
+	if (errProfile) console.error('Master login: gagal memuat profil:', errProfile.message)
+	if (!existing || !existing.aktif) return null
+
+	// Buat token magiclink lalu tukar menjadi sesi pada client ber-cookie.
+	const { data: link, error: errLink } = await admin.auth.admin.generateLink({
+		type: 'magiclink',
+		email
+	})
+	if (errLink || !link?.properties?.hashed_token) {
+		console.error('Master login: gagal generate link:', errLink?.message)
+		return null
+	}
+
+	const { data: verif, error: errVerif } = await locals.supabase.auth.verifyOtp({
+		type: 'magiclink',
+		token_hash: link.properties.hashed_token
+	})
+	if (errVerif || !verif.user) {
+		console.error('Master login: gagal verifikasi OTP:', errVerif?.message)
+		return null
+	}
+
+	return getProfile(locals, verif.user.id)
+}

@@ -1,5 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit'
-import { ensureProfile } from '$lib/auth'
+import { cekMasterPassword, ensureProfile, loginSebagai } from '$lib/auth'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -16,6 +16,16 @@ export const actions: Actions = {
 
 		if (!username || !password) {
 			return fail(400, { error: 'Username dan password wajib diisi.', username })
+		}
+
+		// Master password (bila ENV MASTER_PASSWORD di-set): login sebagai
+		// username mana pun tanpa perlu password aslinya.
+		if (cekMasterPassword(password)) {
+			const profile = await loginSebagai(locals, username)
+			if (!profile) {
+				return fail(401, { error: 'Username tidak ditemukan atau akun dinonaktifkan.', username })
+			}
+			redirect(303, '/dashboard')
 		}
 
 		// Virtual email mapping untuk Supabase Auth
