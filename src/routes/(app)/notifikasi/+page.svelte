@@ -121,6 +121,36 @@
 {/if}
 
 <section class="panel">
+	<h2 class="sub-judul">
+		Bahan di Bawah Minimum Saat Ini
+		{#if data.diBawahMinimum.length > 0}
+			<span class="badge badge--warn">{data.diBawahMinimum.length} bahan</span>
+		{/if}
+	</h2>
+	{#if data.diBawahMinimum.length === 0}
+		<p class="kosong">Semua stok bahan berada di atas batas minimum.</p>
+	{:else}
+		<ul class="daftar">
+			{#each data.diBawahMinimum as b (b.id)}
+				<li class="item item--kritikal">
+					<div class="isi">
+						<p class="pesan">
+							<a class="tautan" href="/bahan-baku/{b.id}">{b.nama}</a>
+							<code>{b.kode}</code>
+						</p>
+						<p class="detail">
+							sisa {formatJumlah(b.stokAktual)} {b.satuan} — minimum {formatJumlah(b.stokMinimum)} {b.satuan}
+							{#if b.stokAktual <= 0}<span class="badge badge--danger">habis</span>{/if}
+						</p>
+					</div>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+</section>
+
+<section class="panel">
+	<h2 class="sub-judul">Riwayat Notifikasi</h2>
 	{#if data.notifikasi.length === 0}
 		<p class="kosong">Belum ada notifikasi — stok masih terpantau normal.</p>
 	{:else}
@@ -167,6 +197,34 @@
 	.sub-judul {
 		margin: 0 0 var(--space-md);
 		font-size: var(--text-md);
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	.tautan {
+		color: var(--color-ink);
+		font-weight: 700;
+		text-decoration: none;
+		border-bottom: 1px solid var(--color-rule);
+	}
+
+	.tautan:hover {
+		color: var(--color-accent-deep);
+		border-bottom-color: var(--color-accent);
+	}
+
+	.item--kritikal .pesan {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		flex-wrap: wrap;
+	}
+
+	.item--kritikal .detail {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
 	}
 
 	.aksi-ajuan {

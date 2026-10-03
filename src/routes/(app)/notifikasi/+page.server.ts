@@ -19,6 +19,26 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	if (error) console.error('Notifikasi: gagal memuat:', error.message)
 
+	// Kondisi TERKINI: bahan yang stoknya sudah menyentuh/melewati batas minimum.
+	// Tidak bergantung pada histori trigger, jadi selalu akurat.
+	const { data: kritikal, error: errKritikal } = await locals.supabase
+		.from('bahan_baku')
+		.select('id, kode, nama, satuan, stok_aktual, stok_minimum')
+		.order('stok_aktual', { ascending: true })
+
+	if (errKritikal) console.error('Notifikasi: gagal memuat kritikal:', errKritikal.message)
+
+	const diBawahMinimum = (kritikal ?? [])
+		.map((b) => ({
+			id: b.id as string,
+			kode: b.kode as string,
+			nama: b.nama as string,
+			satuan: b.satuan as string,
+			stokAktual: Number(b.stok_aktual),
+			stokMinimum: Number(b.stok_minimum)
+		}))
+		.filter((b) => b.stokAktual <= b.stokMinimum)
+
 	// Pengajuan reset password hanya relevan untuk owner.
 	let pengajuan: Array<{
 		id: string
@@ -51,6 +71,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		adalahOwner,
 		pengajuan,
+		diBawahMinimum,
 		notifikasi: (data ?? []).map((n) => {
 			const bahan = embedPertama<{
 				nama: string
