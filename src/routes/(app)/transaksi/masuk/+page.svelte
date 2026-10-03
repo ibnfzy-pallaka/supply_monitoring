@@ -110,10 +110,6 @@
 						required
 					/>
 				</label>
-				<label class="field field--full">
-					Keterangan <span class="hint">(opsional)</span>
-					<input class="input" type="text" name="keterangan" placeholder="mis. pembelian tunai" />
-				</label>
 			</div>
 
 			<div class="form-actions">

@@ -1,10 +1,10 @@
 import { fail } from '@sveltejs/kit'
-import { requireAdmin, requireUser } from '$lib/auth'
+import { requireStaff, requireUser } from '$lib/auth'
 import { angka, ambil, embedPertama, pesanDb } from '$lib/format'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
-	await requireUser(locals)
+	const { profile } = await requireUser(locals)
 
 	const [opnameRes, bahanRes] = await Promise.all([
 		locals.supabase
@@ -24,6 +24,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (opnameRes.error) console.error('Stock opname: gagal memuat:', opnameRes.error.message)
 
 	return {
+		bolehCatat: profile.role === 'staff',
 		opname: (opnameRes.data ?? []).map((o) => {
 			const bahan = embedPertama<{ nama: string; satuan: string }>(o.bahan_baku)
 			return {
@@ -49,7 +50,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	default: async ({ locals, request }) => {
-		const { user } = await requireAdmin(locals)
+		const { user } = await requireStaff(locals)
 		const fd = await request.formData()
 
 		const tanggal = ambil(fd, 'tanggal')

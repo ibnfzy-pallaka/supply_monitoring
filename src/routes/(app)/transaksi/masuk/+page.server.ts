@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		locals.supabase
 			.from('transaksi_masuk')
 			.select(
-				'id, tanggal, qty, harga_satuan, keterangan, sumber_pembayaran, bahan_baku(nama, satuan), supplier(nama), dibuat_oleh'
+				'id, tanggal, qty, harga_satuan, sumber_pembayaran, bahan_baku(nama, satuan), supplier(nama), dibuat_oleh'
 			)
 			.order('tanggal', { ascending: true })
 			.order('created_at', { ascending: true })
@@ -31,7 +31,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 				tanggal: t.tanggal as string,
 				qty: Number(t.qty),
 				hargaSatuan: Number(t.harga_satuan),
-				keterangan: (t.keterangan as string | null) ?? '',
 				sumberPembayaran: (t.sumber_pembayaran as SumberPembayaran | null) ?? 'tunai',
 				bahanNama: bahan?.nama ?? '—',
 				satuan: bahan?.satuan ?? '',
@@ -53,7 +52,6 @@ export const actions: Actions = {
 		const supplierId = ambil(fd, 'supplier_id')
 		const qty = angka(fd, 'qty')
 		const hargaSatuan = angka(fd, 'harga_satuan')
-		const keterangan = ambil(fd, 'keterangan')
 		const sumberInput = ambil(fd, 'sumber_pembayaran')
 		const sumberPembayaran: SumberPembayaran = sumberInput === 'transfer' ? 'transfer' : 'tunai'
 
@@ -68,7 +66,6 @@ export const actions: Actions = {
 			supplier_id: supplierId || null,
 			qty,
 			harga_satuan: hargaSatuan,
-			keterangan: keterangan || null,
 			sumber_pembayaran: sumberPembayaran,
 			dibuat_oleh: user.id
 		})

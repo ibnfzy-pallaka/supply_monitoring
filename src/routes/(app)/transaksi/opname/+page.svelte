@@ -24,8 +24,8 @@
 		sortKey = kolom
 	}
 
-	const owner = $derived(data.profile.role === 'owner')
-	const modalBuka = $derived(owner && page.url.searchParams.get('modal') === 'opname')
+	const bolehCatat = $derived(data.bolehCatat)
+	const modalBuka = $derived(bolehCatat && page.url.searchParams.get('modal') === 'opname')
 	const terpilih = $derived(data.bahan.find((b) => b.id === bahanId))
 	const selisih = $derived(
 		terpilih && stokFisik !== '' && Number.isFinite(Number(stokFisik))
@@ -52,13 +52,13 @@
 
 <div class="kepala-seksi">
 	<p class="sub-seksi">
-		{#if owner}
+		{#if bolehCatat}
 			Riwayat pencatatan stock opname (maks. 100 terakhir).
 		{:else}
-			Riwayat pencatatan stock opname — pencatatan hanya dapat dilakukan oleh Owner/Pemilik.
+			Riwayat pencatatan stock opname — pencatatan hanya dapat dilakukan oleh Admin Gudang.
 		{/if}
 	</p>
-	{#if owner}
+	{#if bolehCatat}
 		<button type="button" class="btn" onclick={bukaModal}>Catat stock opname</button>
 	{/if}
 </div>
@@ -106,7 +106,7 @@
 	{/if}
 </section>
 
-{#if owner}
+{#if bolehCatat}
 	<Modal buka={modalBuka} judul="Catat Stock Opname" onclose={tutupModal}>
 		{#if form?.message}
 			<div class="alert alert--error" role="alert">{form.message}</div>

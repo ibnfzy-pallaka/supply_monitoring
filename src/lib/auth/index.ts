@@ -87,6 +87,15 @@ export async function requireOwner(locals: App.Locals): Promise<{ user: User; pr
 	return { user, profile }
 }
 
+/** Wajib login + role staff (admin gudang); owner tidak diizinkan. */
+export async function requireStaff(locals: App.Locals): Promise<{ user: User; profile: Profile }> {
+	const { user, profile } = await requireUser(locals)
+	if (profile.role !== 'staff') {
+		error(403, 'Akses ditolak — halaman ini khusus admin gudang.')
+	}
+	return { user, profile }
+}
+
 /** Alias untuk kompatibilitas code */
 export const requireAdmin = requireOwner
 
