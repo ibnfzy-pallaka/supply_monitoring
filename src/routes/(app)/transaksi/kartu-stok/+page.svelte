@@ -4,6 +4,12 @@
 	let { data } = $props()
 
 	const dipilih = $derived(data.bahan.find((b) => b.id === data.bahanId))
+
+	const labelJenis: Record<string, string> = {
+		masuk: 'Masuk',
+		keluar: 'Keluar',
+		opname: 'Opname'
+	}
 </script>
 
 <svelte:head>
@@ -29,11 +35,22 @@
 
 	{#if data.bahanId && dipilih}
 		<h3 class="judul-bahan">
-			{dipilih.nama} · sisa saat ini {formatJumlah(dipilih.stokAktual)} {dipilih.satuan}
+			{dipilih.nama} · stok aktual {formatJumlah(dipilih.stokAktual)} {dipilih.satuan}
 		</h3>
+
 		{#if data.kartu.length === 0}
 			<p class="kosong">Tidak ada pergerakan pada rentang ini.</p>
 		{:else}
+			<div class="ringkas">
+				<span>Stok awal: <strong>{formatJumlah(data.stokAwal)}</strong> {dipilih.satuan}</span>
+				<span>Stok akhir: <strong>{formatJumlah(data.stokAkhir)}</strong> {dipilih.satuan}</span>
+				<span class="badge badge--{data.konsisten ? 'ok' : 'warn'}">
+					{data.konsisten
+						? 'Konsisten dengan stok aktual'
+						: `Selisih ${formatJumlah(data.selisih)} vs stok aktual`}
+				</span>
+			</div>
+
 			<div class="tabel-wrap">
 				<table class="table">
 					<thead>
@@ -47,14 +64,31 @@
 						</tr>
 					</thead>
 					<tbody>
+						<tr class="baris-awal">
+							<td colspan="4">Stok awal periode</td>
+							<td class="num">{formatJumlah(data.stokAwal)}</td>
+							<td>—</td>
+						</tr>
 						{#each data.kartu as baris, i (i)}
 							<tr>
 								<td>{formatTanggal(baris.tanggal)}</td>
 								<td>
-									<span class="badge badge--{baris.jenis === 'masuk' ? 'ok' : 'warn'}">{baris.jenis}</span>
+									<span class="badge badge--{baris.jenis === 'masuk'
+										? 'ok'
+										: baris.jenis === 'keluar'
+											? 'warn'
+											: 'info'}">{labelJenis[baris.jenis]}</span>
 								</td>
-								<td class="num">{baris.jenis === 'masuk' ? '+' + formatJumlah(baris.qty) : '—'}</td>
-								<td class="num">{baris.jenis === 'keluar' ? '−' + formatJumlah(baris.qty) : '—'}</td>
+								<td class="num">
+									{baris.jenis === 'masuk' || (baris.jenis === 'opname' && baris.delta > 0)
+										? '+' + formatJumlah(Math.abs(baris.delta))
+										: '—'}
+								</td>
+								<td class="num">
+									{baris.jenis === 'keluar' || (baris.jenis === 'opname' && baris.delta < 0)
+										? '−' + formatJumlah(Math.abs(baris.delta))
+										: '—'}
+								</td>
 								<td class="num">{formatJumlah(baris.sisa)}</td>
 								<td>{baris.keterangan || '—'}</td>
 							</tr>
@@ -88,6 +122,21 @@
 		align-items: center;
 		gap: var(--space-2xs);
 		font-size: var(--text-xs);
+		color: var(--color-muted);
+	}
+
+	.ringkas {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-md);
+		margin-bottom: var(--space-md);
+		font-size: var(--text-sm);
+		color: var(--color-muted);
+	}
+
+	.baris-awal td {
+		font-style: italic;
 		color: var(--color-muted);
 	}
 </style>

@@ -201,6 +201,12 @@
 	border-color: var(--color-success);
 }
 
+.badge--info {
+	background: var(--color-paper-2);
+	color: var(--color-ink);
+	border-color: var(--color-rule);
+}
+
 /* ---------- Utilitas layout ---------- */
 .measure {
 	max-width: var(--measure);
