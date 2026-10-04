@@ -19,17 +19,7 @@
 
 <article class="kertas">
 	<header class="kop">
-		<div class="kop-brand">
-			<svg viewBox="0 0 24 24" aria-hidden="true">
-				<path d="M12 3.5c4.5 2.8 4.5 8.2 0 17-4.5-8.8-4.5-14.2 0-17Z" fill="none" stroke="currentColor" stroke-width="1.6"/>
-				<path d="M12 5v15" stroke="currentColor" stroke-width="1.2"/>
-			</svg>
-			<div>
-				<strong>Supply Monitoring</strong>
-				<span>Sistem Informasi Persediaan Bahan Baku · Kopi Waskita Makassar</span>
-			</div>
-		</div>
-		<hr />
+		<img class="kop-img" src="/kop-surat.png" alt="Kopi Waskita — Kopi murah ga harus mahal" />
 		<h1>{judulLaporan(laporan.jenis)}</h1>
 		<p class="periode">
 			{laporan.jenis === 'persediaan'
@@ -164,36 +154,12 @@
 		margin-inline: auto;
 	}
 
-	.kop-brand {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-	}
-
-	.kop-brand svg {
-		width: 2rem;
-		height: 2rem;
-		color: var(--color-accent-deep);
-		flex-shrink: 0;
-	}
-
-	.kop-brand strong {
+	.kop-img {
 		display: block;
-		font-family: var(--font-display);
-		font-size: var(--text-md);
-	}
-
-	.kop-brand span {
-		font-size: var(--text-xs);
-		color: var(--color-muted);
-	}
-
-	.kop hr {
-		border: 0;
-		border-top: var(--rule-hair) solid var(--color-rule);
-		border-bottom: var(--rule-hair) solid var(--color-rule);
-		height: var(--rule-double);
-		margin: var(--space-sm) 0 var(--space-md);
+		width: 100%;
+		max-width: 100%;
+		height: auto;
+		margin-bottom: var(--space-md);
 	}
 
 	.kop h1 {
@@ -271,7 +237,7 @@
 			max-width: none;
 		}
 
-		.kop-brand svg,
+		.kop-img,
 		tfoot .total {
 			print-color-adjust: exact;
 			-webkit-print-color-adjust: exact;
