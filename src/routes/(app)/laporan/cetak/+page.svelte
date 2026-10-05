@@ -131,8 +131,12 @@
 	{/if}
 
 	<footer class="tanda-tangan">
-		<p>Dicetak {formatTanggal(dicetak)} oleh {data.cetakOleh} · Supply Monitoring</p>
 		<p class="kolofon">Supply Monitoring · Sistem Informasi Persediaan Bahan Baku · Kopi Waskita Makassar</p>
+		<div class="ttd">
+			<p class="ttd-tanggal">Makassar, {formatTanggal(dicetak)}</p>
+			<p class="ttd-jabatan">Penanggung Jawab</p>
+			<p class="ttd-nama">( ........................................ )</p>
+		</div>
 	</footer>
 </article>
 
@@ -195,15 +199,38 @@
 	.tanda-tangan {
 		display: flex;
 		justify-content: space-between;
-		gap: var(--space-md);
+		align-items: flex-end;
+		gap: var(--space-lg);
 		margin-top: var(--space-xl);
 		font-size: var(--text-xs);
 		color: var(--color-muted);
 	}
 
 	.kolofon {
-		text-align: right;
-		max-width: 28rem;
+		max-width: 26rem;
+	}
+
+	/* Blok tanda tangan — rata kanan */
+	.ttd {
+		text-align: center;
+		min-width: 15rem;
+		color: var(--color-ink);
+		font-size: var(--text-sm);
+	}
+
+	.ttd-tanggal {
+		margin: 0 0 var(--space-lg);
+	}
+
+	.ttd-jabatan {
+		margin: 0 0 var(--space-2xl);
+	}
+
+	.ttd-nama {
+		margin: 0;
+		border-top: var(--rule-hair) solid var(--color-ink);
+		padding-top: var(--space-2xs);
+		white-space: nowrap;
 	}
 
 	/* ---------- Cetak: kertas polos, tanpa chrome ---------- */
