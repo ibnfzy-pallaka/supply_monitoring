@@ -13,9 +13,9 @@
 	let bahanId = $state('')
 	let pesanSukses = $state<string | null>(null)
 
-	// Default: tanggal (terlama) paling atas.
+	// Default: tanggal (terbaru) paling atas.
 	let sortKey = $state('tanggal')
-	let sortDir = $state<SortDir>('asc')
+	let sortDir = $state<SortDir>('desc')
 	const transaksi = $derived(sortir(data.transaksi, sortKey, sortDir))
 
 	function gantiSort(kolom: string) {
@@ -57,6 +57,14 @@
 
 <section class="panel">
 	<h2 class="sub-judul">Riwayat terakhir</h2>
+	<form class="filters" method="GET">
+		<label class="mini">Dari <input class="input" type="date" name="dari" value={data.dari} /></label>
+		<label class="mini">Sampai <input class="input" type="date" name="sampai" value={data.sampai} /></label>
+		<button class="btn btn--ghost" type="submit">Terapkan</button>
+		{#if data.dari || data.sampai}
+			<a class="link-aksi" href="/transaksi/keluar">Reset</a>
+		{/if}
+	</form>
 	{#if data.transaksi.length === 0}
 		<p class="kosong">Belum ada barang keluar tercatat.</p>
 	{:else}
@@ -179,5 +187,25 @@
 	.sub-judul {
 		margin: 0 0 var(--space-md);
 		font-size: var(--text-md);
+	}
+
+	.filters {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-sm);
+		margin-bottom: var(--space-md);
+	}
+
+	.filters .input {
+		width: auto;
+	}
+
+	.mini {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2xs);
+		font-size: var(--text-xs);
+		color: var(--color-muted);
 	}
 </style>

@@ -14,9 +14,9 @@
 	let stokFisik = $state<string>('')
 	let pesanSukses = $state<string | null>(null)
 
-	// Default: tanggal (terlama) paling atas.
+	// Default: tanggal (terbaru) paling atas.
 	let sortKey = $state('tanggal')
-	let sortDir = $state<SortDir>('asc')
+	let sortDir = $state<SortDir>('desc')
 	const opname = $derived(sortir(data.opname, sortKey, sortDir))
 
 	function gantiSort(kolom: string) {

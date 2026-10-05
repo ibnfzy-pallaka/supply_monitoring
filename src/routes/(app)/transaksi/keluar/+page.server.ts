@@ -3,16 +3,23 @@ import { requireUser } from '$lib/auth'
 import { angka, ambil, embedPertama, pesanDb } from '$lib/format'
 import type { Actions, PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	const { user } = await requireUser(locals)
 
+	const dari = url.searchParams.get('dari') ?? ''
+	const sampai = url.searchParams.get('sampai') ?? ''
+
+	let trxQuery = locals.supabase
+		.from('transaksi_keluar')
+		.select('id, tanggal, qty, keterangan, bahan_baku(nama, satuan), dibuat_oleh')
+		.order('tanggal', { ascending: false })
+		.order('created_at', { ascending: false })
+		.limit(100)
+	if (dari) trxQuery = trxQuery.gte('tanggal', dari)
+	if (sampai) trxQuery = trxQuery.lte('tanggal', sampai)
+
 	const [trxRes, bahanRes] = await Promise.all([
-		locals.supabase
-			.from('transaksi_keluar')
-			.select('id, tanggal, qty, keterangan, bahan_baku(nama, satuan), dibuat_oleh')
-			.order('tanggal', { ascending: true })
-			.order('created_at', { ascending: true })
-			.limit(100),
+		trxQuery,
 		locals.supabase
 			.from('bahan_baku')
 			.select('id, kode, nama, satuan, stok_aktual')
@@ -39,7 +46,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			nama: b.nama as string,
 			satuan: b.satuan as string,
 			stokAktual: Number(b.stok_aktual)
-		}))
+		})),
+		dari,
+		sampai
 	}
 }
 

@@ -4,18 +4,25 @@ import { angka, ambil, embedPertama, pesanDb } from '$lib/format'
 import type { SumberPembayaran } from '$lib/laporan'
 import type { Actions, PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	const { user } = await requireUser(locals)
 
+	const dari = url.searchParams.get('dari') ?? ''
+	const sampai = url.searchParams.get('sampai') ?? ''
+
+	let trxQuery = locals.supabase
+		.from('transaksi_masuk')
+		.select(
+			'id, tanggal, qty, harga_satuan, sumber_pembayaran, bahan_baku(nama, satuan), supplier(nama), dibuat_oleh'
+		)
+		.order('tanggal', { ascending: false })
+		.order('created_at', { ascending: false })
+		.limit(100)
+	if (dari) trxQuery = trxQuery.gte('tanggal', dari)
+	if (sampai) trxQuery = trxQuery.lte('tanggal', sampai)
+
 	const [trxRes, bahanRes, supplierRes] = await Promise.all([
-		locals.supabase
-			.from('transaksi_masuk')
-			.select(
-				'id, tanggal, qty, harga_satuan, sumber_pembayaran, bahan_baku(nama, satuan), supplier(nama), dibuat_oleh'
-			)
-			.order('tanggal', { ascending: true })
-			.order('created_at', { ascending: true })
-			.limit(100),
+		trxQuery,
 		locals.supabase.from('bahan_baku').select('id, kode, nama, satuan, harga_satuan').order('nama'),
 		locals.supabase.from('supplier').select('id, nama').order('nama')
 	])
@@ -38,7 +45,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			}
 		}),
 		bahan: bahanRes.data ?? [],
-		supplier: supplierRes.data ?? []
+		supplier: supplierRes.data ?? [],
+		dari,
+		sampai
 	}
 }
 
