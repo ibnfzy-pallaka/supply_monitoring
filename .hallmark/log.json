@@ -1,6 +1,31 @@
 {
 	"entries": [
 		{
+			"date": "2026-10-14",
+			"genre": "editorial",
+			"macrostructure": "workbench (app variant)",
+			"theme": "Almanac (sistem terkunci dipertahankan — tokens.css; tidak rotate)",
+			"enrichment": "none (halaman app — fungsi yang memimpin)",
+			"nav": "N3-side-rail (shell app, di luar scope)",
+			"footer": "none (halaman app)",
+			"anchorHue": "kopi (oklch 84°) — dipertahankan",
+			"accent": "sienna oklch(56% 0.122 62), <5% viewport",
+			"type": "Source Serif 4 (display) + Atkinson Hyperlegible (body)",
+			"motion": ["batang-reveal (fade+scaleY, reduced-motion crossfade)", "row-rule-hover (border accent)"],
+			"knobs": "hero=none (angka raksasa dihapus sesuai permintaan client) · angka kritis=badge kecil di kepala tabel",
+			"responsiveVerified": [320, 375, 414, 768],
+			"overflowX": "clip, nol horizontal scroll di 4 lebar (docW==winW diverifikasi Playwright)",
+			"slopGates": "58/58 pass (gate 34/38a/46/48/49/51 diverifikasi; gate 6 & 44 dipenuhi via hero=none)",
+			"checks": "svelte-check 0 error 0 warning; npm run build sukses; verifikasi Playwright 4 viewport + stress long-word header",
+			"artifacts": ["src/routes/(app)/dashboard/+page.svelte"],
+			"replaced": [
+				"Stat-Led hero (angka raksasa 'N bahan di bawah minimum') -> Workbench: kalimat status + strip metrik ringkas",
+				"angka kritis -> badge kecil di kepala tabel peringatan",
+				"seksyen kartu polos -> panel berhairline di atas paper-2 (permukaan Workbench)"
+			],
+			"filesDeleted": 0
+		},
+		{
 			"date": "2026-09-26",
 			"genre": "editorial",
 			"macrostructure": "centered-auth (letter variant, page-scope auth gate)",

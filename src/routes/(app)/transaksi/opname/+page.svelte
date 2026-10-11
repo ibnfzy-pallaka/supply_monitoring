@@ -12,6 +12,8 @@
 	let mengirim = $state(false)
 	let bahanId = $state('')
 	let stokFisik = $state<string>('')
+	let tanggal = $state(hariIni())
+	let alasan = $state('')
 	let pesanSukses = $state<string | null>(null)
 
 	// Default: tanggal (terbaru) paling atas.
@@ -25,7 +27,22 @@
 	}
 
 	const bolehCatat = $derived(data.bolehCatat)
-	const modalBuka = $derived(bolehCatat && page.url.searchParams.get('modal') === 'opname')
+	const editId = $derived(page.url.searchParams.get('edit') ?? '')
+	const mengedit = $derived(bolehCatat && editId !== '' && data.opname.find((o) => o.id === editId) !== undefined)
+	const modalTambah = $derived(bolehCatat && page.url.searchParams.get('modal') === 'opname')
+	const modalBuka = $derived(modalTambah || mengedit)
+
+	const dataEditing = $derived(editId ? (data.opname.find((o) => o.id === editId) ?? null) : null)
+
+	// Prefill form saat modal dibuka (mode tambah atau edit).
+	$effect(() => {
+		if (mengedit && dataEditing) {
+			tanggal = dataEditing.tanggal
+			bahanId = dataEditing.bahanId
+			stokFisik = String(dataEditing.stokFisik)
+			alasan = dataEditing.alasan
+		}
+	})
 	const terpilih = $derived(data.bahan.find((b) => b.id === bahanId))
 	const selisih = $derived(
 		terpilih && stokFisik !== '' && Number.isFinite(Number(stokFisik))
@@ -37,11 +54,20 @@
 		mengirim = false
 	}
 
+	function resetForm() {
+		tanggal = hariIni()
+		bahanId = ''
+		stokFisik = ''
+		alasan = ''
+	}
+
 	function bukaModal() {
+		resetForm()
 		goto(`${page.url.pathname}?modal=opname`, { replaceState: true, noScroll: true })
 	}
 
 	function tutupModal() {
+		resetForm()
 		goto(page.url.pathname, { replaceState: true, noScroll: true })
 	}
 </script>
@@ -85,6 +111,7 @@
 						<SortableTh kolom="stokFisik" aktif={sortKey} dir={sortDir} klik={gantiSort} numeric>Fisik</SortableTh>
 						<SortableTh kolom="selisih" aktif={sortKey} dir={sortDir} klik={gantiSort} numeric>Selisih</SortableTh>
 						<SortableTh kolom="alasan" aktif={sortKey} dir={sortDir} klik={gantiSort}>Alasan</SortableTh>
+						{#if bolehCatat}<th>Aksi</th>{/if}
 					</tr>
 				</thead>
 				<tbody>
@@ -98,6 +125,11 @@
 								{o.selisih > 0 ? '+' : ''}{formatJumlah(o.selisih)}
 							</td>
 							<td>{o.alasan}</td>
+							{#if bolehCatat}
+								<td class="aksi">
+									<a class="link-aksi" href={`${page.url.pathname}?edit=${o.id}`}>Ubah</a>
+								</td>
+							{/if}
 						</tr>
 					{/each}
 				</tbody>
@@ -107,22 +139,25 @@
 </section>
 
 {#if bolehCatat}
-	<Modal buka={modalBuka} judul="Catat Stock Opname" onclose={tutupModal}>
+	<Modal
+		buka={modalBuka}
+		judul={mengedit ? 'Koreksi Stock Opname' : 'Catat Stock Opname'}
+		onclose={tutupModal}
+	>
 		{#if form?.message}
 			<div class="alert alert--error" role="alert">{form.message}</div>
 		{/if}
 
 		<form
 			method="POST"
+		action={mengedit ? '?/edit' : '?/default'}
 		use:enhance={() => {
 			mengirim = true
 			return async ({ result, update }) => {
 				selesai()
 				if (result.type === 'success' && result.data) {
 					const res = result.data as { success?: string }
-					pesanSukses = res.success ?? 'Stock opname berhasil dicatat.'
-					bahanId = ''
-					stokFisik = ''
+					pesanSukses = res.success ?? 'Stock opname berhasil disimpan.'
 					tutupModal()
 				} else {
 					await update()
@@ -130,15 +165,18 @@
 			}
 		}}
 		>
+			{#if mengedit}
+				<input type="hidden" name="id" value={editId} />
+			{/if}
 			<div class="form-grid">
 				<label class="field">
 					Tanggal
-					<input class="input" type="date" name="tanggal" value={hariIni()} required />
+					<input class="input" type="date" name="tanggal" bind:value={tanggal} required />
 				</label>
 				<label class="field">
 					Bahan baku
 					<select class="input" name="bahan_baku_id" bind:value={bahanId} required>
-						<option value="" disabled selected>Pilih bahan…</option>
+						<option value="" disabled>Pilih bahan…</option>
 						{#each data.bahan as b (b.id)}
 							<option value={b.id}>{b.nama} — sistem {formatJumlah(b.stokAktual)} {b.satuan}</option>
 						{/each}
@@ -169,6 +207,7 @@
 						class="input"
 						type="text"
 						name="alasan"
+						bind:value={alasan}
 						required
 						placeholder="mis. rusak/terbuang, salah catat sebelumnya"
 					/>
@@ -177,7 +216,7 @@
 
 			<div class="form-actions">
 				<button class="btn" type="submit" disabled={mengirim} data-state={mengirim ? 'loading' : undefined}>
-					{mengirim ? 'Menyimpan…' : 'Simpan opname'}
+					{mengirim ? 'Menyimpan…' : mengedit ? 'Simpan koreksi' : 'Simpan opname'}
 				</button>
 				<button type="button" class="btn btn--ghost" onclick={tutupModal}>Batal</button>
 			</div>
@@ -214,5 +253,9 @@
 
 	.selisih.minus {
 		color: var(--color-danger);
+	}
+
+	.aksi {
+		white-space: nowrap;
 	}
 </style>

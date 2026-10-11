@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		locals.supabase
 			.from('stock_opname')
 			.select(
-				'id, tanggal, stok_sistem, stok_fisik, selisih, alasan, bahan_baku(nama, satuan)'
+				'id, tanggal, stok_sistem, stok_fisik, selisih, alasan, bahan_baku_id, bahan_baku(nama, satuan)'
 			)
 			.order('tanggal', { ascending: false })
 			.order('created_at', { ascending: false })
@@ -34,6 +34,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				stokFisik: Number(o.stok_fisik),
 				selisih: Number(o.selisih),
 				alasan: o.alasan as string,
+				bahanId: o.bahan_baku_id as string,
 				bahanNama: bahan?.nama ?? '—',
 				satuan: bahan?.satuan ?? ''
 			}
@@ -81,5 +82,56 @@ export const actions: Actions = {
 		if (error) return fail(400, { message: pesanDb(error) })
 
 		return { success: 'Stock opname tersimpan — stok sistem disesuaikan.' }
+	},
+
+	// Koreksi data opname yang salah input (khusus Admin Gudang / role 'staff').
+	edit: async ({ locals, request }) => {
+		await requireStaff(locals)
+		const fd = await request.formData()
+
+		const id = ambil(fd, 'id')
+		const tanggal = ambil(fd, 'tanggal')
+		const bahanId = ambil(fd, 'bahan_baku_id')
+		const stokFisik = angka(fd, 'stok_fisik')
+		const alasan = ambil(fd, 'alasan')
+
+		if (!id) return fail(400, { message: 'Data opname tidak dikenali.' })
+		if (!tanggal || !bahanId) return fail(400, { message: 'Tanggal dan bahan wajib dipilih.' })
+		if (stokFisik === null || stokFisik < 0)
+			return fail(400, { message: 'Stok fisik tidak boleh negatif.' })
+		if (!alasan) return fail(400, { message: 'Alasan penyesuaian wajib diisi.' })
+
+		const { data: bahan } = await locals.supabase
+			.from('bahan_baku')
+			.select('stok_aktual')
+			.eq('id', bahanId)
+			.single()
+		if (!bahan) return fail(400, { message: 'Bahan tidak ditemukan.' })
+
+		// Saat bahan diganti, snapshot stok sistem diambil dari bahan baru.
+		// Bila bahan tetap sama, nilai stok_sistem lama dipertahankan.
+		const { data: lama } = await locals.supabase
+			.from('stock_opname')
+			.select('bahan_baku_id, stok_sistem')
+			.eq('id', id)
+			.single()
+		if (!lama) return fail(404, { message: 'Data opname tidak ditemukan.' })
+
+		const stokSistem =
+			lama.bahan_baku_id === bahanId ? Number(lama.stok_sistem) : Number(bahan.stok_aktual)
+
+		const { error } = await locals.supabase
+			.from('stock_opname')
+			.update({
+				tanggal,
+				bahan_baku_id: bahanId,
+				stok_sistem: stokSistem,
+				stok_fisik: stokFisik,
+				alasan
+			})
+			.eq('id', id)
+		if (error) return fail(400, { message: pesanDb(error) })
+
+		return { success: 'Koreksi stock opname tersimpan — stok sistem disesuaikan.' }
 	}
 }

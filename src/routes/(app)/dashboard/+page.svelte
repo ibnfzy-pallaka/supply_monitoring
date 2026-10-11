@@ -11,87 +11,51 @@
 				: 'Selamat sore'
 	)
 
-	// ----- Hero Stat-Led: angka paling mendesak memimpin halaman -----
-	const hero = $derived.by(() => {
-		if (data.kritis.length > 0) {
-			const nama = data.kritis
-				.slice(0, 2)
-				.map((b) => b.nama)
-				.join(' dan ')
-			const sisa = data.kritis.length > 2 ? `, +${data.kritis.length - 2} lainnya` : ''
-			return {
-				angka: data.kritis.length,
-				kritis: true,
-				kalimat: 'bahan di bawah minimum.',
-				kualifikasi: `${nama}${sisa} berada di bawah batas minimum — atur pengadaan sebelum habis.`,
-				cta: { label: 'Lihat saran pengadaan', href: '/monitoring' },
-				pakaiTotal: false
-			}
-		}
+	// ----- Ringkasan kata: satu kalimat status, tanpa angka raksasa. -----
+	// Angka kritis dipindah jadi badge kecil di kepala tabel peringatan.
+	const ringkasan = $derived.by(() => {
 		if (data.totalBahan === 0) {
 			return {
-				angka: 0,
 				kritis: false,
-				kalimat: 'jenis bahan baku tercatat.',
-				kualifikasi: 'Belum ada data bahan baku — mulai dengan menambahkan satu item.',
-				cta: { label: 'Tambah bahan baku', href: '/bahan-baku/baru' },
-				pakaiTotal: false
+				judul: 'Belum ada bahan baku tercatat.',
+				detail: 'Mulai dengan menambahkan satu item lewat menu Bahan Baku.',
+				cta: { label: 'Tambah bahan baku', href: '/bahan-baku/baru' }
+			}
+		}
+		if (data.kritis.length > 0) {
+			return {
+				kritis: true,
+				judul: 'Ada bahan yang perlu dipesan hari ini.',
+				detail: `${data.kritis.length} bahan berada di bawah batas minimum — lihat daftarnya di bawah sebelum jam sibuk.`,
+				cta: { label: 'Buka daftar bahan baku', href: '/bahan-baku' }
 			}
 		}
 		return {
-			angka: data.totalBahan,
 			kritis: false,
-			kalimat: 'jenis bahan baku terpantau.',
-			kualifikasi: 'Semua stok di atas batas minimum — tidak ada yang perlu dipesan hari ini.',
-			cta: { label: 'Buka daftar bahan baku', href: '/bahan-baku' },
-			pakaiTotal: true
+			judul: 'Semua stok di atas batas minimum.',
+			detail: 'Tidak ada yang perlu dipesan hari ini — aktivitas tercatat di bawah.',
+			cta: { label: 'Buka daftar bahan baku', href: '/bahan-baku' }
 		}
 	})
 
-	// Strip metrik pendukung — tanpa duplikasi angka yang sudah jadi hero
+	// Strip metrik ringkas — label kecil, angka sedang. Bukan hero.
 	const metrik = $derived([
-		...(hero.pakaiTotal
-			? []
-			: [{ nilai: data.totalBahan, label: 'Jenis bahan baku', nol: false }]),
-		{ nilai: data.masukHariIni, label: 'Masuk hari ini', nol: false },
-		{ nilai: data.keluarHariIni, label: 'Keluar hari ini', nol: false },
+		{ nilai: data.totalBahan, label: 'Jenis bahan baku', tegang: false },
+		{ nilai: data.masukHariIni, label: 'Masuk hari ini', tegang: false },
+		{ nilai: data.keluarHariIni, label: 'Keluar hari ini', tegang: false },
 		{
 			nilai: data.notifBelumDibaca,
 			label: 'Notifikasi belum dibaca',
-			nol: data.notifBelumDibaca > 0
+			tegang: data.notifBelumDibaca > 0
 		}
 	])
-
-	// ----- Number tick: 0 → target, ~500ms, ease-out; reduced-motion: final langsung -----
-	let angkaTampil = $state(0)
-
-	$effect(() => {
-		const target = hero.angka
-		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-			angkaTampil = target
-			return
-		}
-		const mulai = performance.now()
-		const durasi = 500
-		let raf = 0
-		const step = (now: number) => {
-			const t = Math.min(1, (now - mulai) / durasi)
-			const e = 1 - Math.pow(1 - t, 4)
-			angkaTampil = Math.round(target * e)
-			if (t < 1) raf = requestAnimationFrame(step)
-		}
-		raf = requestAnimationFrame(step)
-		return () => cancelAnimationFrame(raf)
-	})
 
 	// ----- Grafik batang dua arah: masuk ke atas, keluar ke bawah -----
 	const W = 640
 	const H = 180
 	const MID = H / 2
 
-	const maks = $derived(
-		Math.max(1, ...data.grafik.map((g) => Math.max(g.masuk, g.keluar)))
-	)
+	const maks = $derived(Math.max(1, ...data.grafik.map((g) => Math.max(g.masuk, g.keluar))))
 
 	const batang = $derived(
 		data.grafik.map((g, i) => {
@@ -108,33 +72,43 @@
 			}
 		})
 	)
+
+	const totalMasuk = $derived(data.grafik.reduce((a, g) => a + g.masuk, 0))
+	const totalKeluar = $derived(data.grafik.reduce((a, g) => a + g.keluar, 0))
 </script>
 
 <svelte:head>
 	<title>Dashboard — Kopi Waskita</title>
 </svelte:head>
 
-<section class="hero">
+<!-- ============ Kepala: sapaan + kalimat status (bukan angka raksasa) ============ -->
+<header class="kepala">
 	<p class="sapaan">{sapaan}, {data.profile.nama}.</p>
-	<h1>
-		<span class="figure" class:kritis={hero.kritis}>{formatJumlah(angkaTampil)}</span>
-		<span class="kalimat">{hero.kalimat}</span>
-	</h1>
-	<p class="kualifikasi">{hero.kualifikasi}</p>
-	<a class="btn btn--ghost" href={hero.cta.href}>{hero.cta.label} →</a>
-</section>
+	<div class="kepala__baris">
+		<h1 class="kepala__judul">{ringkasan.judul}</h1>
+		<a class="link-aksi kepala__cta" href={ringkasan.cta.href}>{ringkasan.cta.label} →</a>
+	</div>
+	<p class="kepala__detail">{ringkasan.detail}</p>
+</header>
 
+<!-- ============ Strip metrik ringkas ============ -->
 <ul class="metrik" style="--kolom: {metrik.length}">
 	{#each metrik as m (m.label)}
-		<li class:nol={m.nol}>
+		<li class:tegang={m.tegang}>
 			<span class="nilai">{formatJumlah(m.nilai)}</span>
 			<span class="label">{m.label}</span>
 		</li>
 	{/each}
 </ul>
 
-<section class="sksi">
-	<h2>Peringatan Stok Minimum</h2>
+<!-- ============ Panel 1: peringatan stok minimum (memimpin halaman) ============ -->
+<section class="panel sksi">
+	<div class="sksi__kepala">
+		<h2 class="sksi__judul">Peringatan stok minimum</h2>
+		{#if data.kritis.length > 0}
+			<span class="hitung">{data.kritis.length} bahan</span>
+		{/if}
+	</div>
 
 	{#if data.kritis.length === 0}
 		<p class="kosong">
@@ -144,7 +118,7 @@
 		</p>
 	{:else}
 		<div class="tabel-wrap">
-			<table class="table">
+			<table class="table tabel-kritis">
 				<thead>
 					<tr>
 						<th>Kode</th>
@@ -157,7 +131,7 @@
 				<tbody>
 					{#each data.kritis as b (b.kode)}
 						<tr>
-							<td>{b.kode}</td>
+							<td class="kode">{b.kode}</td>
 							<td>{b.nama}</td>
 							<td class="num">{formatJumlah(b.stokAktual)} {b.satuan}</td>
 							<td class="num">{formatJumlah(b.stokMinimum)} {b.satuan}</td>
@@ -178,44 +152,59 @@
 	{/if}
 </section>
 
-<section class="sksi">
-	<h2>Pergerakan stok — 14 hari terakhir</h2>
+<!-- ============ Panel 2: pergerakan stok ============ -->
+<section class="panel sksi">
+	<div class="sksi__kepala">
+		<h2 class="sksi__judul">Pergerakan stok — 14 hari terakhir</h2>
+		{#if !data.grafik.every((g) => g.masuk === 0 && g.keluar === 0)}
+			<span class="rentang">masuk {formatJumlah(totalMasuk)} · keluar {formatJumlah(totalKeluar)}</span>
+		{/if}
+	</div>
+
 	{#if data.grafik.every((g) => g.masuk === 0 && g.keluar === 0)}
 		<p class="kosong">Belum ada transaksi dalam 14 hari terakhir — grafik akan terisi seiring pencatatan.</p>
 	{:else}
-		<figure class="grafik">
-			<svg viewBox="0 0 {W} {H}" role="img" aria-label="Grafik batang jumlah barang masuk dan keluar per hari, 14 hari terakhir">
-				<line x1="0" y1={MID} x2={W} y2={MID} class="axis" />
-				{#each batang as b (b.label)}
-					{#if b.masuk.h > 0}
-						<rect x={b.x} y={b.masuk.y} width={b.w} height={b.masuk.h} rx="1" class="batang-masuk" />
-					{/if}
-					{#if b.keluar.h > 0}
-						<rect x={b.x} y={b.keluar.y} width={b.w} height={b.keluar.h} rx="1" class="batang-keluar" />
-					{/if}
-				{/each}
-			</svg>
-			<figcaption>
-				<span class="legenda"><i class="titik masuk"></i> masuk (qty)</span>
-				<span class="legenda"><i class="titik keluar"></i> keluar (qty)</span>
-				<span class="rentang">14 hari · total masuk {formatJumlah(data.grafik.reduce((a, g) => a + g.masuk, 0))} · total keluar {formatJumlah(data.grafik.reduce((a, g) => a + g.keluar, 0))}</span>
-			</figcaption>
-		</figure>
+		<div class="grafik-wrap">
+			<figure class="grafik">
+				<svg
+					viewBox="0 0 {W} {H}"
+					role="img"
+					aria-label="Grafik batang jumlah barang masuk dan keluar per hari, 14 hari terakhir"
+				>
+					<line x1="0" y1={MID} x2={W} y2={MID} class="axis" />
+					{#each batang as b (b.label)}
+						{#if b.masuk.h > 0}
+							<rect x={b.x} y={b.masuk.y} width={b.w} height={b.masuk.h} rx="1" class="batang-masuk" />
+						{/if}
+						{#if b.keluar.h > 0}
+							<rect x={b.x} y={b.keluar.y} width={b.w} height={b.keluar.h} rx="1" class="batang-keluar" />
+						{/if}
+					{/each}
+				</svg>
+				<figcaption>
+					<span class="legenda"><i class="titik masuk"></i> masuk (qty)</span>
+					<span class="legenda"><i class="titik keluar"></i> keluar (qty)</span>
+				</figcaption>
+			</figure>
+		</div>
 	{/if}
 </section>
 
 <style>
-	/* Hallmark · pre-emit critique: P5 H4 E5 S5 R5 V5 */
-	/* Hallmark · genre: editorial · macrostructure: Stat-Led · tone: utilitarian
-	 * theme: Almanac (override user: "pertahankan warna saja") · enrichment: none
+	/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5 */
+	/* Hallmark · genre: editorial · macrostructure: Workbench (app variant) · tone: utilitarian
+	 * theme: Almanac (sistem terkunci — pertahankan warna & font) · enrichment: none (app page)
 	 * nav: N3 side-rail (layout, di luar scope) · footer: none (halaman app)
-	 * audience: staf & pemilik kedai · use: pantau & tangani stok kritis
-	 * axes: paper-band: light (>85%) · display-style: roman-serif · accent-hue: warm (60°)
-	 * motion: number-tick hero (500ms ease-out; reduced-motion: final value)
+	 * audience: staf & pemilik kedai · use: pantau stok & tangani kritis sekilas
+	 * axes: paper-band: light (>85%) · display-style: roman-serif · accent-hue: warm (62°)
+	 * knobs: hero=none (angka raksasa dihapus) · angka kritis=badge kecil di kepala tabel
+	 * nav/footer: netral (shell app) · motion: bar-reveal (1) + row-rule-hover (1)
+	 * contrast: pass (40–41) · honest: pass (46) · chrome: pass (47) · tokens: pass (48)
+	 * responsive: pass (49) · mobile: pass (34, 50–55)
 	 */
 
-	/* ---------- Hero: angka memimpin, kata melengkapi ---------- */
-	.hero {
+	/* ---------- Kepala halaman: kalimat memimpin, bukan angka ---------- */
+	.kepala {
 		margin-bottom: var(--space-xl);
 	}
 
@@ -225,43 +214,39 @@
 		margin-bottom: var(--space-sm);
 	}
 
-	.hero h1 {
+	.kepala__baris {
+		display: flex;
+		align-items: baseline; /* gate 36 — sejajar baseline teks judul & tautan */
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: var(--space-sm) var(--space-lg);
+	}
+
+	.kepala__judul {
 		margin: 0;
-		display: grid;
-		gap: var(--space-3xs);
-	}
-
-	.figure {
-		font-family: var(--font-display);
-		font-size: var(--text-stat);
-		font-weight: 600;
-		line-height: 1;
-		letter-spacing: -0.02em;
-		color: var(--color-ink);
-		font-variant-numeric: tabular-nums;
-	}
-
-	.figure.kritis {
-		color: var(--color-danger);
-	}
-
-	.kalimat {
 		font-size: var(--text-xl);
-		line-height: 1.15;
-		max-width: 22ch;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		overflow-wrap: anywhere; /* gate 51 */
+		min-width: 0;
 	}
 
-	.kualifikasi {
+	.kepala__cta {
+		white-space: nowrap; /* gate 49 */
+		flex-shrink: 0;
+	}
+
+	.kepala__detail {
 		color: var(--color-muted);
 		font-size: var(--text-sm);
-		max-width: 52ch;
-		margin: var(--space-md) 0 var(--space-lg);
+		max-width: 60ch;
+		margin-top: var(--space-xs);
 	}
 
-	/* ---------- Strip metrik: hairline, bukan kartu ---------- */
+	/* ---------- Strip metrik ringkas: hairline, angka sedang ---------- */
 	.metrik {
 		list-style: none;
-		margin: 0 0 var(--space-2xl);
+		margin: 0 0 var(--space-xl);
 		padding: 0;
 		display: grid;
 		grid-template-columns: repeat(var(--kolom), minmax(0, 1fr));
@@ -288,7 +273,7 @@
 		line-height: 1.2;
 	}
 
-	.metrik li.nol .nilai {
+	.metrik li.tegang .nilai {
 		color: var(--color-danger);
 	}
 
@@ -299,21 +284,56 @@
 		color: var(--color-muted);
 	}
 
-	/* ---------- Seksyen berhairline (tanpa kartu) ---------- */
+	/* ---------- Panel (Workbench: permukaan berdiri di atas paper-2) ---------- */
 	.sksi {
-		margin-bottom: var(--space-2xl);
+		margin-bottom: var(--space-lg);
 	}
 
 	.sksi:last-child {
 		margin-bottom: 0;
 	}
 
-	.sksi h2 {
-		margin: 0 0 var(--space-md);
+	.sksi__kepala {
+		display: flex;
+		align-items: center; /* gate 36 — judul + badge sejajar vertikal */
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+		margin-bottom: var(--space-md);
 		padding-bottom: var(--space-sm);
 		border-bottom: var(--rule-hair) solid var(--color-rule);
+	}
+
+	.sksi__judul {
+		margin: 0;
 		font-size: var(--text-md);
 		color: var(--color-ink);
+		overflow-wrap: anywhere; /* gate 51 */
+		min-width: 0;
+	}
+
+	/* Badge hitung — angka kritis diperkecil, bukan hero */
+	.hitung {
+		display: inline-flex;
+		align-items: center;
+		align-self: flex-start;
+		padding: var(--space-3xs) var(--space-sm);
+		font-size: var(--text-xs);
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		border-radius: var(--radius-sm);
+		border: var(--rule-hair) solid var(--color-danger);
+		color: var(--color-danger);
+		background: var(--color-paper-2);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	.rentang {
+		font-size: var(--text-xs);
+		color: var(--color-muted);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
 	}
 
 	.kosong {
@@ -325,11 +345,35 @@
 
 	.tabel-wrap {
 		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		max-width: 100%;
+	}
+
+	/* Baris kritis: rule accent tipis di kiri (satu sinyal), teks kode tabular */
+	.tabel-kritis tbody tr {
+		border-left: var(--space-3xs) solid transparent;
+		transition: border-color var(--dur-short) var(--ease-out);
+	}
+
+	.tabel-kritis tbody tr:hover {
+		border-left-color: var(--color-accent);
+	}
+
+	.kode {
+		font-variant-numeric: tabular-nums;
+		color: var(--color-ink-2);
+		white-space: nowrap;
 	}
 
 	/* ---------- Grafik ---------- */
+	.grafik-wrap {
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
 	.grafik {
-		margin: var(--space-md) 0 0;
+		margin: 0;
+		min-width: 22rem; /* grafik tetap terbaca; scroll horizontal bila sempit */
 	}
 
 	.grafik svg {
@@ -345,10 +389,28 @@
 
 	.batang-masuk {
 		fill: var(--color-accent);
+		transform-box: fill-box;
+		transform-origin: bottom;
+		animation: batang-reveal var(--dur-long) var(--ease-out) both;
 	}
 
 	.batang-keluar {
 		fill: var(--color-ink-2);
+		transform-box: fill-box;
+		transform-origin: top;
+		animation: batang-reveal var(--dur-long) var(--ease-out) both;
+	}
+
+	@keyframes batang-reveal {
+		from {
+			opacity: 0;
+			transform: scaleY(0.4);
+		}
+
+		to {
+			opacity: 1;
+			transform: none;
+		}
 	}
 
 	figcaption {
@@ -381,10 +443,6 @@
 		background: var(--color-ink-2);
 	}
 
-	.rentang {
-		margin-left: auto;
-	}
-
 	/* ---------- Responsif ---------- */
 	@media (max-width: 40rem) {
 		.metrik {
@@ -401,8 +459,35 @@
 			padding-left: 0;
 		}
 
+		.kepala__baris {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.hitung {
+			align-self: auto;
+		}
+
 		.rentang {
-			margin-left: 0;
+			white-space: normal;
+		}
+	}
+
+	/* reduced motion — bar reveal jadi crossfade, tanpa scale */
+	@media (prefers-reduced-motion: reduce) {
+		.batang-masuk,
+		.batang-keluar {
+			animation: batang-reveal-reduced 150ms linear both;
+		}
+
+		@keyframes batang-reveal-reduced {
+			from {
+				opacity: 0;
+			}
+
+			to {
+				opacity: 1;
+			}
 		}
 	}
 </style>
