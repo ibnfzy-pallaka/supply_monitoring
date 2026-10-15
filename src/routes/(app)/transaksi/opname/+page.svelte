@@ -150,7 +150,7 @@
 
 		<form
 			method="POST"
-		action={mengedit ? '?/edit' : '?/default'}
+		action={mengedit ? '?/edit' : '?/create'}
 		use:enhance={() => {
 			mengirim = true
 			return async ({ result, update }) => {

@@ -50,7 +50,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 }
 
 export const actions: Actions = {
-	default: async ({ locals, request }) => {
+	// Catat opname baru. SvelteKit melarang action `default` berdampingan dengan
+	// named action — jadi create & edit keduanya memakai nama eksplisit.
+	create: async ({ locals, request }) => {
 		const { user } = await requireStaff(locals)
 		const fd = await request.formData()
 
